@@ -10,8 +10,10 @@
 
   <title>Lector de Productos</title>
 
-  <script src="https://unpkg.com/html5-qrcode"
-          type="text/javascript"></script>
+  <script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript">
+  </script>
 
   <style>
 
@@ -30,6 +32,12 @@
 
     h1 {
       text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #estado {
+      text-align: center;
+      color: #666;
       margin-bottom: 20px;
     }
 
@@ -83,6 +91,10 @@
       color: white;
     }
 
+    #actualizar {
+      background: #1976d2;
+    }
+
   </style>
 
 </head>
@@ -94,10 +106,16 @@
 
   <h1>📦 Lector de Productos</h1>
 
+  <div id="estado">
+    Cargando productos...
+  </div>
+
+
   <div id="reader"></div>
 
+
   <div id="mensaje">
-    📷 Apunta la cámara a un código de barras
+    Preparando lector...
   </div>
 
 
@@ -109,7 +127,8 @@
         CODIGO INTERNO
       </div>
 
-      <div class="valor" id="codigoInterno">
+      <div class="valor"
+           id="codigoInterno">
       </div>
 
     </div>
@@ -121,7 +140,8 @@
         DESCRIPTOR
       </div>
 
-      <div class="valor" id="descriptor">
+      <div class="valor"
+           id="descriptor">
       </div>
 
     </div>
@@ -133,7 +153,8 @@
         PRECIO
       </div>
 
-      <div class="valor" id="precio">
+      <div class="valor"
+           id="precio">
       </div>
 
     </div>
@@ -145,7 +166,8 @@
         PRECIO OAI
       </div>
 
-      <div class="valor" id="precioOAI">
+      <div class="valor"
+           id="precioOAI">
       </div>
 
     </div>
@@ -157,7 +179,8 @@
         BARRAS
       </div>
 
-      <div class="valor" id="barras">
+      <div class="valor"
+           id="barras">
       </div>
 
     </div>
@@ -165,8 +188,18 @@
   </div>
 
 
+  <button id="actualizar"
+          onclick="actualizarBase()">
+
+    🔄 ACTUALIZAR PRODUCTOS
+
+  </button>
+
+
   <button onclick="iniciarScanner()">
+
     📷 ESCANEAR NUEVAMENTE
+
   </button>
 
 </div>
@@ -175,22 +208,276 @@
 <script>
 
 
-// ======================================================
-// URL DE APPS SCRIPT
-// ======================================================
+// =====================================================
+// CONFIGURACIÓN
+// =====================================================
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
+
+// =====================================================
+// VARIABLES
+// =====================================================
+
+let productos = [];
+
+let indice = {};
 
 let scanner = null;
 
 let escaneando = false;
 
 
-// ======================================================
-// CÁMARA
-// ======================================================
+// =====================================================
+// CARGAR BASE
+// =====================================================
+
+function cargarBase() {
+
+  document.getElementById("estado").innerText =
+    "⬇️ Descargando productos...";
+
+
+  fetch(API_URL + "?accion=productos")
+
+    .then(function(response) {
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Error HTTP " + response.status
+        );
+
+      }
+
+      return response.json();
+
+    })
+
+
+    .then(function(data) {
+
+      productos = data;
+
+      construirIndice();
+
+      guardarBaseLocal();
+
+      document.getElementById("estado").innerText =
+        "✅ " + productos.length +
+        " productos cargados";
+
+
+      document.getElementById("mensaje").innerText =
+        "📷 Apunta la cámara a un código de barras";
+
+
+      iniciarScanner();
+
+    })
+
+
+    .catch(function(error) {
+
+      console.error(error);
+
+
+      // Intentar cargar una copia local.
+
+      cargarBaseLocal();
+
+    });
+
+}
+
+
+// =====================================================
+// CREAR ÍNDICE
+// =====================================================
+
+function construirIndice() {
+
+  indice = {};
+
+
+  for (
+    let i = 0;
+    i < productos.length;
+    i++
+  ) {
+
+    const producto = productos[i];
+
+    const barras =
+      String(producto["BARRAS"] || "").trim();
+
+
+    if (!barras) {
+      continue;
+    }
+
+
+    indice[barras] = producto;
+
+  }
+
+}
+
+
+// =====================================================
+// GUARDAR EN EL CELULAR
+// =====================================================
+
+function guardarBaseLocal() {
+
+  try {
+
+    localStorage.setItem(
+      "productos",
+      JSON.stringify(productos)
+    );
+
+    localStorage.setItem(
+      "fechaActualizacion",
+      new Date().toISOString()
+    );
+
+  } catch (error) {
+
+    console.error(
+      "No se pudo guardar la base local",
+      error
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// CARGAR BASE LOCAL
+// =====================================================
+
+function cargarBaseLocal() {
+
+  try {
+
+    const datos =
+      localStorage.getItem("productos");
+
+
+    if (!datos) {
+
+      document.getElementById("estado").innerText =
+        "❌ No se pudo cargar la base.";
+
+      document.getElementById("mensaje").innerText =
+        "Necesitas conexión a Internet para descargar los productos.";
+
+      return;
+
+    }
+
+
+    productos = JSON.parse(datos);
+
+    construirIndice();
+
+
+    const fecha =
+      localStorage.getItem(
+        "fechaActualizacion"
+      );
+
+
+    document.getElementById("estado").innerText =
+      "📱 " + productos.length +
+      " productos guardados";
+
+
+    document.getElementById("mensaje").innerText =
+      "📷 Lector disponible";
+
+
+    iniciarScanner();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    document.getElementById("estado").innerText =
+      "❌ Error cargando productos.";
+
+  }
+
+}
+
+
+// =====================================================
+// ACTUALIZAR BASE
+// =====================================================
+
+function actualizarBase() {
+
+  document.getElementById("estado").innerText =
+    "⬇️ Actualizando productos...";
+
+
+  fetch(API_URL + "?accion=productos")
+
+    .then(function(response) {
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Error HTTP " + response.status
+        );
+
+      }
+
+      return response.json();
+
+    })
+
+
+    .then(function(data) {
+
+      productos = data;
+
+      construirIndice();
+
+      guardarBaseLocal();
+
+
+      document.getElementById("estado").innerText =
+        "✅ Actualizado: " +
+        productos.length +
+        " productos";
+
+
+      document.getElementById("mensaje").innerText =
+        "📷 Listo para escanear";
+
+    })
+
+
+    .catch(function(error) {
+
+      console.error(error);
+
+      document.getElementById("estado").innerText =
+        "❌ No se pudo actualizar.";
+
+    });
+
+}
+
+
+// =====================================================
+// INICIAR CÁMARA
+// =====================================================
 
 function iniciarScanner() {
 
@@ -198,13 +485,22 @@ function iniciarScanner() {
     return;
   }
 
+
+  if (productos.length === 0) {
+
+    document.getElementById("mensaje").innerText =
+      "⏳ Esperando productos...";
+
+    return;
+
+  }
+
+
   escaneando = true;
 
-  document.getElementById("mensaje").innerText =
-    "📷 Buscando código...";
 
-
-  scanner = new Html5Qrcode("reader");
+  scanner =
+    new Html5Qrcode("reader");
 
 
   scanner.start(
@@ -220,25 +516,18 @@ function iniciarScanner() {
         width: 300,
         height: 150
       }
+
     },
 
 
     function(codigoDetectado) {
 
-      console.log(
-        "Código detectado:",
-        codigoDetectado
-      );
-
-
       detenerScanner();
 
 
-      document.getElementById("mensaje").innerText =
-        "🔎 Buscando producto...";
-
-
-      buscarProducto(codigoDetectado);
+      buscarProductoLocal(
+        codigoDetectado
+      );
 
     },
 
@@ -246,7 +535,7 @@ function iniciarScanner() {
     function(error) {
 
       // Ignorar errores normales
-      // mientras busca el código.
+      // de lectura.
 
     }
 
@@ -259,6 +548,7 @@ function iniciarScanner() {
 
     escaneando = false;
 
+
     document.getElementById("mensaje").innerText =
       "❌ No se pudo acceder a la cámara.";
 
@@ -267,9 +557,9 @@ function iniciarScanner() {
 }
 
 
-// ======================================================
+// =====================================================
 // DETENER CÁMARA
-// ======================================================
+// =====================================================
 
 function detenerScanner() {
 
@@ -307,94 +597,33 @@ function detenerScanner() {
 }
 
 
-// ======================================================
-// BUSCAR PRODUCTO
-// ======================================================
+// =====================================================
+// BUSCAR LOCALMENTE
+// =====================================================
 
-function buscarProducto(codigo) {
+function buscarProductoLocal(codigo) {
 
-  document.getElementById("mensaje").innerText =
-    "🔎 Buscando producto...";
-
-
-  // Creamos un nombre único para la función
-  // que recibirá la respuesta de Apps Script.
-
-  const callback =
-    "respuestaProducto_" + Date.now();
+  const inicio =
+    performance.now();
 
 
-  // Creamos la función global.
-
-  window[callback] = function(respuesta) {
-
-    mostrarProducto(respuesta);
-
-    // Eliminamos la función después de utilizarla.
-
-    delete window[callback];
-
-  };
+  const producto =
+    indice[String(codigo).trim()];
 
 
-  // Creamos la URL.
+  const tiempo =
+    Math.round(
+      performance.now() - inicio
+    );
 
-  const url =
-    API_URL +
-    "?codigo=" +
-    encodeURIComponent(codigo) +
-    "&callback=" +
-    callback;
-
-
-  // Creamos un <script>.
-  // Esto evita el problema de CORS de fetch().
-
-  const script =
-    document.createElement("script");
-
-
-  script.src = url;
-
-
-  script.onerror = function() {
-
-    document.getElementById("mensaje").innerText =
-      "⚠️ No se pudo conectar con Google Sheets.";
-
-    delete window[callback];
-
-  };
-
-
-  document.body.appendChild(script);
-
-}
-
-
-// ======================================================
-// MOSTRAR PRODUCTO
-// ======================================================
-
-function mostrarProducto(respuesta) {
 
   console.log(
-    "Respuesta de Apps Script:",
-    respuesta
+    "Búsqueda local:",
+    tiempo + " ms"
   );
 
 
-  if (!respuesta) {
-
-    document.getElementById("mensaje").innerText =
-      "⚠️ Respuesta vacía.";
-
-    return;
-
-  }
-
-
-  if (!respuesta.encontrado) {
+  if (!producto) {
 
     document.getElementById("mensaje").innerText =
       "❌ Producto no encontrado.";
@@ -406,12 +635,27 @@ function mostrarProducto(respuesta) {
   }
 
 
-  const producto =
-    respuesta.producto;
+  mostrarProducto(
+    producto,
+    tiempo
+  );
 
+}
+
+
+// =====================================================
+// MOSTRAR PRODUCTO
+// =====================================================
+
+function mostrarProducto(
+  producto,
+  tiempo
+) {
 
   document.getElementById("mensaje").innerText =
-    "✅ Producto encontrado";
+    "✅ Encontrado en " +
+    tiempo +
+    " ms";
 
 
   document.getElementById("codigoInterno").innerText =
@@ -436,9 +680,9 @@ function mostrarProducto(respuesta) {
 }
 
 
-// ======================================================
-// LIMPIAR
-// ======================================================
+// =====================================================
+// LIMPIAR RESULTADO
+// =====================================================
 
 function limpiarResultado() {
 
@@ -460,11 +704,11 @@ function limpiarResultado() {
 }
 
 
-// ======================================================
+// =====================================================
 // INICIAR
-// ======================================================
+// =====================================================
 
-iniciarScanner();
+cargarBase();
 
 
 </script>
