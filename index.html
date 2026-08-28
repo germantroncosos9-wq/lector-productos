@@ -3,99 +3,98 @@
 
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-  <title>Lector de Productos</title>
+<title>Lector de Productos</title>
 
-  <script
-    src="https://unpkg.com/html5-qrcode"
-    type="text/javascript">
-  </script>
+<script
+src="https://unpkg.com/html5-qrcode"
+type="text/javascript">
+</script>
 
-  <style>
+<style>
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f4f4;
-      color: #222;
-    }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f4f4f4;
+  color: #222;
+}
 
-    .contenedor {
-      max-width: 500px;
-      margin: auto;
-    }
+.contenedor {
+  max-width: 500px;
+  margin: auto;
+}
 
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+h1 {
+  text-align: center;
+}
 
-    #estado {
-      text-align: center;
-      color: #666;
-      margin-bottom: 20px;
-    }
+#estado {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
 
-    #reader {
-      width: 100%;
-      max-width: 450px;
-      margin: auto;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+#reader {
+  width: 100%;
+  max-width: 450px;
+  margin: auto;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
 
-    #mensaje {
-      text-align: center;
-      margin: 20px 0;
-      font-size: 18px;
-    }
+#mensaje {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 18px;
+}
 
-    #resultado {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-top: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+#resultado {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
-    .dato {
-      margin-bottom: 18px;
-    }
+.dato {
+  margin-bottom: 18px;
+}
 
-    .titulo {
-      font-size: 13px;
-      color: #777;
-      margin-bottom: 5px;
-    }
+.titulo {
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 5px;
+}
 
-    .valor {
-      font-size: 20px;
-      font-weight: bold;
-      word-break: break-word;
-    }
+.valor {
+  font-size: 20px;
+  font-weight: bold;
+  word-break: break-word;
+}
 
-    button {
-      width: 100%;
-      padding: 15px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 10px;
-      font-size: 18px;
-      background: #222;
-      color: white;
-    }
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  background: #222;
+  color: white;
+}
 
-    #actualizar {
-      background: #1976d2;
-    }
+#actualizar {
+  background: #1976d2;
+}
 
-  </style>
+</style>
 
 </head>
 
@@ -104,103 +103,62 @@
 
 <div class="contenedor">
 
-  <h1>📦 Lector de Productos</h1>
+<h1>📦 Lector de Productos</h1>
 
-  <div id="estado">
-    Cargando productos...
-  </div>
+<div id="estado">
+Cargando productos...
+</div>
 
+<div id="reader"></div>
 
-  <div id="reader"></div>
-
-
-  <div id="mensaje">
-    Preparando lector...
-  </div>
+<div id="mensaje">
+Preparando lector...
+</div>
 
 
-  <div id="resultado">
+<div id="resultado">
 
-    <div class="dato">
+<div class="dato">
+<div class="titulo">CODIGO INTERNO</div>
+<div class="valor" id="codigoInterno"></div>
+</div>
 
-      <div class="titulo">
-        CODIGO INTERNO
-      </div>
+<div class="dato">
+<div class="titulo">DESCRIPTOR</div>
+<div class="valor" id="descriptor"></div>
+</div>
 
-      <div class="valor"
-           id="codigoInterno">
-      </div>
+<div class="dato">
+<div class="titulo">PRECIO</div>
+<div class="valor" id="precio"></div>
+</div>
 
-    </div>
+<div class="dato">
+<div class="titulo">PRECIO OAI</div>
+<div class="valor" id="precioOAI"></div>
+</div>
 
+<div class="dato">
+<div class="titulo">BARRAS</div>
+<div class="valor" id="barras"></div>
+</div>
 
-    <div class="dato">
-
-      <div class="titulo">
-        DESCRIPTOR
-      </div>
-
-      <div class="valor"
-           id="descriptor">
-      </div>
-
-    </div>
-
-
-    <div class="dato">
-
-      <div class="titulo">
-        PRECIO
-      </div>
-
-      <div class="valor"
-           id="precio">
-      </div>
-
-    </div>
+</div>
 
 
-    <div class="dato">
+<button id="actualizar"
+onclick="actualizarBase()">
 
-      <div class="titulo">
-        PRECIO OAI
-      </div>
+🔄 ACTUALIZAR PRODUCTOS
 
-      <div class="valor"
-           id="precioOAI">
-      </div>
-
-    </div>
+</button>
 
 
-    <div class="dato">
+<button onclick="iniciarScanner()">
 
-      <div class="titulo">
-        BARRAS
-      </div>
+📷 ESCANEAR NUEVAMENTE
 
-      <div class="valor"
-           id="barras">
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <button id="actualizar"
-          onclick="actualizarBase()">
-
-    🔄 ACTUALIZAR PRODUCTOS
-
-  </button>
-
-
-  <button onclick="iniciarScanner()">
-
-    📷 ESCANEAR NUEVAMENTE
-
-  </button>
+</button>
 
 </div>
 
@@ -216,10 +174,6 @@ const API_URL =
 "https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
 
-// =====================================================
-// VARIABLES
-// =====================================================
-
 let productos = [];
 
 let indice = {};
@@ -230,7 +184,7 @@ let escaneando = false;
 
 
 // =====================================================
-// CARGAR BASE
+// CARGAR BASE USANDO JSONP
 // =====================================================
 
 function cargarBase() {
@@ -239,30 +193,29 @@ function cargarBase() {
     "⬇️ Descargando productos...";
 
 
-  fetch(API_URL + "?accion=productos")
+  const callback =
+    "recibirProductos_" + Date.now();
 
-    .then(function(response) {
 
-      if (!response.ok) {
+  window[callback] = function(data) {
+
+    try {
+
+      if (!Array.isArray(data)) {
 
         throw new Error(
-          "Error HTTP " + response.status
+          "La respuesta no es una lista"
         );
 
       }
 
-      return response.json();
-
-    })
-
-
-    .then(function(data) {
 
       productos = data;
 
       construirIndice();
 
       guardarBaseLocal();
+
 
       document.getElementById("estado").innerText =
         "✅ " + productos.length +
@@ -273,21 +226,46 @@ function cargarBase() {
         "📷 Apunta la cámara a un código de barras";
 
 
+      delete window[callback];
+
+
       iniciarScanner();
 
-    })
-
-
-    .catch(function(error) {
+    } catch (error) {
 
       console.error(error);
 
+      usarBaseLocal();
 
-      // Intentar cargar una copia local.
+    }
 
-      cargarBaseLocal();
+  };
 
-    });
+
+  const script =
+    document.createElement("script");
+
+
+  script.src =
+    API_URL +
+    "?accion=productos&callback=" +
+    callback;
+
+
+  script.onerror = function() {
+
+    console.error(
+      "No se pudo descargar la base"
+    );
+
+    delete window[callback];
+
+    usarBaseLocal();
+
+  };
+
+
+  document.body.appendChild(script);
 
 }
 
@@ -309,16 +287,18 @@ function construirIndice() {
 
     const producto = productos[i];
 
-    const barras =
-      String(producto["BARRAS"] || "").trim();
+    const codigo =
+      String(
+        producto["BARRAS"] || ""
+      ).trim();
 
 
-    if (!barras) {
+    if (!codigo) {
       continue;
     }
 
 
-    indice[barras] = producto;
+    indice[codigo] = producto;
 
   }
 
@@ -326,7 +306,7 @@ function construirIndice() {
 
 
 // =====================================================
-// GUARDAR EN EL CELULAR
+// GUARDAR BASE LOCAL
 // =====================================================
 
 function guardarBaseLocal() {
@@ -338,15 +318,16 @@ function guardarBaseLocal() {
       JSON.stringify(productos)
     );
 
+
     localStorage.setItem(
       "fechaActualizacion",
       new Date().toISOString()
     );
 
-  } catch (error) {
+  } catch(error) {
 
     console.error(
-      "No se pudo guardar la base local",
+      "Error guardando base",
       error
     );
 
@@ -356,43 +337,42 @@ function guardarBaseLocal() {
 
 
 // =====================================================
-// CARGAR BASE LOCAL
+// USAR BASE LOCAL
 // =====================================================
 
-function cargarBaseLocal() {
+function usarBaseLocal() {
 
   try {
 
-    const datos =
+    const guardada =
       localStorage.getItem("productos");
 
 
-    if (!datos) {
+    if (!guardada) {
 
       document.getElementById("estado").innerText =
-        "❌ No se pudo cargar la base.";
+        "❌ No se pudo conectar con Google Sheets";
+
 
       document.getElementById("mensaje").innerText =
-        "Necesitas conexión a Internet para descargar los productos.";
+        "Conéctate a Internet e intenta nuevamente.";
+
 
       return;
 
     }
 
 
-    productos = JSON.parse(datos);
+    productos =
+      JSON.parse(guardada);
+
 
     construirIndice();
 
 
-    const fecha =
-      localStorage.getItem(
-        "fechaActualizacion"
-      );
-
-
     document.getElementById("estado").innerText =
-      "📱 " + productos.length +
+      "📱 Usando " +
+      productos.length +
       " productos guardados";
 
 
@@ -402,13 +382,9 @@ function cargarBaseLocal() {
 
     iniciarScanner();
 
-
-  } catch (error) {
+  } catch(error) {
 
     console.error(error);
-
-    document.getElementById("estado").innerText =
-      "❌ Error cargando productos.";
 
   }
 
@@ -425,58 +401,73 @@ function actualizarBase() {
     "⬇️ Actualizando productos...";
 
 
-  fetch(API_URL + "?accion=productos")
-
-    .then(function(response) {
-
-      if (!response.ok) {
-
-        throw new Error(
-          "Error HTTP " + response.status
-        );
-
-      }
-
-      return response.json();
-
-    })
+  const callback =
+    "actualizacion_" + Date.now();
 
 
-    .then(function(data) {
+  window[callback] = function(data) {
 
-      productos = data;
-
-      construirIndice();
-
-      guardarBaseLocal();
-
+    if (!Array.isArray(data)) {
 
       document.getElementById("estado").innerText =
-        "✅ Actualizado: " +
-        productos.length +
-        " productos";
+        "❌ Error al actualizar.";
+
+      delete window[callback];
+
+      return;
+
+    }
 
 
-      document.getElementById("mensaje").innerText =
-        "📷 Listo para escanear";
+    productos = data;
 
-    })
+    construirIndice();
+
+    guardarBaseLocal();
 
 
-    .catch(function(error) {
+    document.getElementById("estado").innerText =
+      "✅ " +
+      productos.length +
+      " productos actualizados";
 
-      console.error(error);
 
-      document.getElementById("estado").innerText =
-        "❌ No se pudo actualizar.";
+    document.getElementById("mensaje").innerText =
+      "📷 Listo para escanear";
 
-    });
+
+    delete window[callback];
+
+  };
+
+
+  const script =
+    document.createElement("script");
+
+
+  script.src =
+    API_URL +
+    "?accion=productos&callback=" +
+    callback;
+
+
+  script.onerror = function() {
+
+    document.getElementById("estado").innerText =
+      "❌ No se pudo actualizar.";
+
+    delete window[callback];
+
+  };
+
+
+  document.body.appendChild(script);
 
 }
 
 
 // =====================================================
-// INICIAR CÁMARA
+// CÁMARA
 // =====================================================
 
 function iniciarScanner() {
@@ -524,7 +515,6 @@ function iniciarScanner() {
 
       detenerScanner();
 
-
       buscarProductoLocal(
         codigoDetectado
       );
@@ -534,8 +524,7 @@ function iniciarScanner() {
 
     function(error) {
 
-      // Ignorar errores normales
-      // de lectura.
+      // Ignorar errores normales.
 
     }
 
@@ -547,7 +536,6 @@ function iniciarScanner() {
     console.error(error);
 
     escaneando = false;
-
 
     document.getElementById("mensaje").innerText =
       "❌ No se pudo acceder a la cámara.";
@@ -608,19 +596,15 @@ function buscarProductoLocal(codigo) {
 
 
   const producto =
-    indice[String(codigo).trim()];
+    indice[
+      String(codigo).trim()
+    ];
 
 
   const tiempo =
     Math.round(
       performance.now() - inicio
     );
-
-
-  console.log(
-    "Búsqueda local:",
-    tiempo + " ms"
-  );
 
 
   if (!producto) {
@@ -681,7 +665,7 @@ function mostrarProducto(
 
 
 // =====================================================
-// LIMPIAR RESULTADO
+// LIMPIAR
 // =====================================================
 
 function limpiarResultado() {
