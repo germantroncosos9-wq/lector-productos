@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Lector de Productos</title>
+
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 25px;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 450px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #resultado {
+      max-width: 450px;
+      margin: 25px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      font-size: 20px;
+    }
+
+    .codigo {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 10px;
+      word-break: break-all;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 15px 25px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>📦 Lector de Productos</h1>
+
+  <div id="reader"></div>
+
+  <div id="resultado">
+    Escanea un código de barras
+    <div class="codigo" id="codigo"></div>
+  </div>
+
+  <button onclick="iniciarScanner()">
+    📷 Escanear nuevamente
+  </button>
+
+  <script>
+
+    let scanner;
+
+    function iniciarScanner() {
+
+      document.getElementById("codigo").innerText = "";
+
+      scanner = new Html5Qrcode("reader");
+
+      scanner.start(
+        { facingMode: "environment" },
+
+        {
+          fps: 10,
+          qrbox: {
+            width: 300,
+            height: 150
+          }
+        },
+
+        function(codigoDetectado) {
+
+          document.getElementById("codigo").innerText =
+            codigoDetectado;
+
+          scanner.stop().catch(function(error) {
+            console.log(error);
+          });
+
+        },
+
+        function(error) {
+          // Errores normales mientras intenta detectar el código.
+        }
+
+      ).catch(function(error) {
+
+        document.getElementById("codigo").innerText =
+          "No se pudo acceder a la cámara.";
+
+        console.error(error);
+
+      });
+    }
+
+    iniciarScanner();
+
+  </script>
+
+</body>
+</html>
