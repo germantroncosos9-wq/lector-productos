@@ -6,13 +6,12 @@
 <meta charset="UTF-8">
 
 <meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+      content="width=device-width, initial-scale=1.0">
 
 <title>Lector de Productos</title>
 
-<script
-src="https://unpkg.com/html5-qrcode"
-type="text/javascript">
+<script src="https://unpkg.com/html5-qrcode"
+        type="text/javascript">
 </script>
 
 <style>
@@ -155,9 +154,8 @@ Preparando lector...
 </div>
 
 
-<button
-id="actualizar"
-onclick="actualizarBase()">
+<button id="actualizar"
+        onclick="actualizarBase()">
 
 🔄 ACTUALIZAR PRODUCTOS
 
@@ -184,6 +182,19 @@ const API_URL =
 "https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
 
+const DB_NAME =
+"LectorProductosDB";
+
+const DB_VERSION = 1;
+
+const STORE_NAME =
+"productos";
+
+
+// =====================================================
+// VARIABLES
+// =====================================================
+
 let productos = [];
 
 let indice = {};
@@ -191,6 +202,183 @@ let indice = {};
 let scanner = null;
 
 let escaneando = false;
+
+
+// =====================================================
+// INDEXEDDB
+// =====================================================
+
+function abrirDB() {
+
+  return new Promise(
+    function(resolve, reject) {
+
+      const request =
+        indexedDB.open(
+          DB_NAME,
+          DB_VERSION
+        );
+
+
+      request.onupgradeneeded =
+        function(event) {
+
+          const db =
+            event.target.result;
+
+
+          if (
+            !db.objectStoreNames.contains(
+              STORE_NAME
+            )
+          ) {
+
+            db.createObjectStore(
+              STORE_NAME,
+              {
+                keyPath: "id"
+              }
+            );
+
+          }
+
+        };
+
+
+      request.onsuccess =
+        function(event) {
+
+          resolve(
+            event.target.result
+          );
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// GUARDAR PRODUCTOS EN INDEXEDDB
+// =====================================================
+
+async function guardarBaseDB() {
+
+  const db =
+    await abrirDB();
+
+
+  return new Promise(
+    function(resolve, reject) {
+
+      const transaction =
+        db.transaction(
+          STORE_NAME,
+          "readwrite"
+        );
+
+
+      const store =
+        transaction.objectStore(
+          STORE_NAME
+        );
+
+
+      store.put({
+        id: "base",
+        productos: productos,
+        fecha: new Date().toISOString()
+      });
+
+
+      transaction.oncomplete =
+        function() {
+
+          resolve();
+
+        };
+
+
+      transaction.onerror =
+        function() {
+
+          reject(
+            transaction.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// LEER PRODUCTOS DESDE INDEXEDDB
+// =====================================================
+
+async function cargarBaseDB() {
+
+  const db =
+    await abrirDB();
+
+
+  return new Promise(
+    function(resolve, reject) {
+
+      const transaction =
+        db.transaction(
+          STORE_NAME,
+          "readonly"
+        );
+
+
+      const store =
+        transaction.objectStore(
+          STORE_NAME
+        );
+
+
+      const request =
+        store.get("base");
+
+
+      request.onsuccess =
+        function() {
+
+          resolve(
+            request.result || null
+          );
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
 
 
 // =====================================================
@@ -208,7 +396,9 @@ function construirIndice() {
     i++
   ) {
 
-    const producto = productos[i];
+    const producto =
+      productos[i];
+
 
     const codigo =
       String(
@@ -221,44 +411,8 @@ function construirIndice() {
     }
 
 
-    indice[codigo] = producto;
-
-  }
-
-}
-
-
-// =====================================================
-// GUARDAR BASE LOCAL
-// =====================================================
-
-function guardarBaseLocal() {
-
-  try {
-
-    localStorage.setItem(
-      "productos",
-      JSON.stringify(productos)
-    );
-
-
-    const fecha =
-      new Date();
-
-
-    localStorage.setItem(
-      "fechaActualizacion",
-      fecha.toISOString()
-    );
-
-
-    mostrarFecha(
-      fecha
-    );
-
-  } catch(error) {
-
-    console.error(error);
+    indice[codigo] =
+      producto;
 
   }
 
@@ -280,7 +434,9 @@ function mostrarFecha(fecha) {
     new Date(fecha);
 
 
-  document.getElementById("fecha").innerText =
+  document.getElementById(
+    "fecha"
+  ).innerText =
     "🕐 Última actualización: " +
     fechaLocal.toLocaleString(
       "es-CL"
@@ -290,70 +446,77 @@ function mostrarFecha(fecha) {
 
 
 // =====================================================
-// CARGAR BASE LOCAL AL ABRIR
+// CARGAR BASE AL ABRIR
 // =====================================================
 
-function cargarBaseLocal() {
+async function cargarBaseLocal() {
 
   try {
 
-    const guardada =
-      localStorage.getItem(
-        "productos"
+    document.getElementById(
+      "estado"
+    ).innerText =
+      "📱 Cargando base local...";
+
+
+    const datos =
+      await cargarBaseDB();
+
+
+    if (
+      datos &&
+      Array.isArray(
+        datos.productos
+      ) &&
+      datos.productos.length > 0
+    ) {
+
+      productos =
+        datos.productos;
+
+
+      construirIndice();
+
+
+      mostrarFecha(
+        datos.fecha
       );
 
 
-    const fecha =
-      localStorage.getItem(
-        "fechaActualizacion"
-      );
+      document.getElementById(
+        "estado"
+      ).innerText =
+        "📱 " +
+        productos.length +
+        " productos";
 
 
-    if (!guardada) {
+      document.getElementById(
+        "mensaje"
+      ).innerText =
+        "📷 Listo para escanear";
 
-      // No existe una base todavía.
-      // Hay que descargarla.
 
-      descargarBase();
+      iniciarScanner();
+
 
       return;
 
     }
 
 
-    productos =
-      JSON.parse(
-        guardada
-      );
+    // No existe una base local.
 
+    descargarBase();
 
-    construirIndice();
-
-
-    if (fecha) {
-
-      mostrarFecha(
-        fecha
-      );
-
-    }
-
-
-    document.getElementById("estado").innerText =
-      "📱 " +
-      productos.length +
-      " productos";
-
-
-    document.getElementById("mensaje").innerText =
-      "📷 Listo para escanear";
-
-
-    iniciarScanner();
 
   } catch(error) {
 
-    console.error(error);
+    console.error(
+      "Error leyendo IndexedDB:",
+      error
+    );
+
 
     descargarBase();
 
@@ -363,12 +526,14 @@ function cargarBaseLocal() {
 
 
 // =====================================================
-// DESCARGAR BASE DESDE GOOGLE
+// DESCARGAR BASE DESDE GOOGLE SHEETS
 // =====================================================
 
 function descargarBase() {
 
-  document.getElementById("estado").innerText =
+  document.getElementById(
+    "estado"
+  ).innerText =
     "⬇️ Descargando productos...";
 
 
@@ -378,11 +543,13 @@ function descargarBase() {
 
 
   window[callback] =
-    function(data) {
+    async function(data) {
 
       try {
 
-        if (!Array.isArray(data)) {
+        if (
+          !Array.isArray(data)
+        ) {
 
           throw new Error(
             "Respuesta incorrecta"
@@ -397,16 +564,30 @@ function descargarBase() {
 
         construirIndice();
 
-        guardarBaseLocal();
+
+        await guardarBaseDB();
 
 
-        document.getElementById("estado").innerText =
+        const fecha =
+          new Date();
+
+
+        mostrarFecha(
+          fecha
+        );
+
+
+        document.getElementById(
+          "estado"
+        ).innerText =
           "✅ " +
           productos.length +
           " productos";
 
 
-        document.getElementById("mensaje").innerText =
+        document.getElementById(
+          "mensaje"
+        ).innerText =
           "📷 Listo para escanear";
 
 
@@ -419,7 +600,9 @@ function descargarBase() {
 
         console.error(error);
 
-        usarBaseLocal();
+        delete window[callback];
+
+        usarBaseAnterior();
 
       }
 
@@ -443,7 +626,7 @@ function descargarBase() {
 
       delete window[callback];
 
-      usarBaseLocal();
+      usarBaseAnterior();
 
     };
 
@@ -456,65 +639,70 @@ function descargarBase() {
 
 
 // =====================================================
-// USAR BASE LOCAL
+// USAR BASE ANTERIOR
 // =====================================================
 
-function usarBaseLocal() {
+async function usarBaseAnterior() {
 
-  const guardada =
-    localStorage.getItem(
-      "productos"
-    );
+  try {
 
-
-  if (!guardada) {
-
-    document.getElementById("estado").innerText =
-      "❌ No hay productos disponibles";
+    const datos =
+      await cargarBaseDB();
 
 
-    document.getElementById("mensaje").innerText =
-      "Necesitas Internet para descargar la base.";
+    if (
+      !datos ||
+      !datos.productos
+    ) {
+
+      document.getElementById(
+        "estado"
+      ).innerText =
+        "❌ No hay productos disponibles";
 
 
-    return;
-
-  }
-
-
-  productos =
-    JSON.parse(
-      guardada
-    );
+      document.getElementById(
+        "mensaje"
+      ).innerText =
+        "Conéctate a Internet para descargar la base.";
 
 
-  construirIndice();
+      return;
+
+    }
 
 
-  const fecha =
-    localStorage.getItem(
-      "fechaActualizacion"
-    );
+    productos =
+      datos.productos;
 
 
-  if (fecha) {
+    construirIndice();
+
 
     mostrarFecha(
-      fecha
+      datos.fecha
     );
 
+
+    document.getElementById(
+      "estado"
+    ).innerText =
+      "📱 Usando copia local";
+
+
+    document.getElementById(
+      "mensaje"
+    ).innerText =
+      "📷 Listo para escanear";
+
+
+    iniciarScanner();
+
+  } catch(error) {
+
+    console.error(error);
+
   }
-
-
-  document.getElementById("estado").innerText =
-    "📱 Usando copia local";
-
-
-  document.getElementById("mensaje").innerText =
-    "📷 Listo para escanear";
-
-
-  iniciarScanner();
 
 }
 
@@ -525,22 +713,18 @@ function usarBaseLocal() {
 
 function actualizarBase() {
 
-  if (
-    !confirm(
-      "¿Actualizar la base de productos?"
-    )
-  ) {
+  const confirmar =
+    confirm(
+      "¿Actualizar los productos desde Google Sheets?"
+    );
 
+
+  if (!confirmar) {
     return;
-
   }
 
 
   detenerScanner();
-
-
-  document.getElementById("estado").innerText =
-    "⬇️ Actualizando productos...";
 
 
   descargarBase();
@@ -559,7 +743,9 @@ function iniciarScanner() {
   }
 
 
-  if (productos.length === 0) {
+  if (
+    productos.length === 0
+  ) {
 
     return;
 
@@ -592,7 +778,6 @@ function iniciarScanner() {
 
     },
 
-
     function(codigoDetectado) {
 
       detenerScanner();
@@ -604,10 +789,10 @@ function iniciarScanner() {
 
     },
 
-
     function(error) {
 
-      // Ignorar errores normales.
+      // Errores normales
+      // de lectura: ignorar.
 
     }
 
@@ -622,7 +807,9 @@ function iniciarScanner() {
       escaneando = false;
 
 
-      document.getElementById("mensaje").innerText =
+      document.getElementById(
+        "mensaje"
+      ).innerText =
         "❌ No se pudo acceder a la cámara.";
 
     }
@@ -702,10 +889,14 @@ function buscarProductoLocal(
 
   if (!producto) {
 
-    document.getElementById("mensaje").innerText =
+    document.getElementById(
+      "mensaje"
+    ).innerText =
       "❌ Producto no encontrado.";
 
+
     limpiarResultado();
+
 
     return;
 
@@ -729,30 +920,52 @@ function mostrarProducto(
   tiempo
 ) {
 
-  document.getElementById("mensaje").innerText =
+  document.getElementById(
+    "mensaje"
+  ).innerText =
     "✅ Encontrado en " +
     tiempo +
     " ms";
 
 
-  document.getElementById("codigoInterno").innerText =
-    producto["CODIGO INTERNO"] || "-";
+  document.getElementById(
+    "codigoInterno"
+  ).innerText =
+    producto[
+      "CODIGO INTERNO"
+    ] || "-";
 
 
-  document.getElementById("descriptor").innerText =
-    producto["DESCRIPTOR"] || "-";
+  document.getElementById(
+    "descriptor"
+  ).innerText =
+    producto[
+      "DESCRIPTOR"
+    ] || "-";
 
 
-  document.getElementById("precio").innerText =
-    producto["PRECIO"] || "-";
+  document.getElementById(
+    "precio"
+  ).innerText =
+    producto[
+      "PRECIO"
+    ] || "-";
 
 
-  document.getElementById("precioOAI").innerText =
-    producto["PRECIOOAI"] || "-";
+  document.getElementById(
+    "precioOAI"
+  ).innerText =
+    producto[
+      "PRECIOOAI"
+    ] || "-";
 
 
-  document.getElementById("barras").innerText =
-    producto["BARRAS"] || "-";
+  document.getElementById(
+    "barras"
+  ).innerText =
+    producto[
+      "BARRAS"
+    ] || "-";
 
 }
 
@@ -763,20 +976,29 @@ function mostrarProducto(
 
 function limpiarResultado() {
 
-  document.getElementById("codigoInterno").innerText =
-    "";
+  document.getElementById(
+    "codigoInterno"
+  ).innerText = "";
 
-  document.getElementById("descriptor").innerText =
-    "";
 
-  document.getElementById("precio").innerText =
-    "";
+  document.getElementById(
+    "descriptor"
+  ).innerText = "";
 
-  document.getElementById("precioOAI").innerText =
-    "";
 
-  document.getElementById("barras").innerText =
-    "";
+  document.getElementById(
+    "precio"
+  ).innerText = "";
+
+
+  document.getElementById(
+    "precioOAI"
+  ).innerText = "";
+
+
+  document.getElementById(
+    "barras"
+  ).innerText = "";
 
 }
 
