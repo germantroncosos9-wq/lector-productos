@@ -10,8 +10,13 @@
 
 <title>Lector de Productos</title>
 
-<script src="https://unpkg.com/html5-qrcode"
-        type="text/javascript">
+<link rel="manifest" href="./manifest.json">
+
+<meta name="theme-color" content="#1976d2">
+
+<script
+src="https://unpkg.com/html5-qrcode"
+type="text/javascript">
 </script>
 
 <style>
@@ -191,10 +196,6 @@ const STORE_NAME =
 "productos";
 
 
-// =====================================================
-// VARIABLES
-// =====================================================
-
 let productos = [];
 
 let indice = {};
@@ -271,7 +272,7 @@ function abrirDB() {
 
 
 // =====================================================
-// GUARDAR PRODUCTOS EN INDEXEDDB
+// GUARDAR BASE
 // =====================================================
 
 async function guardarBaseDB() {
@@ -297,9 +298,15 @@ async function guardarBaseDB() {
 
 
       store.put({
+
         id: "base",
-        productos: productos,
-        fecha: new Date().toISOString()
+
+        productos:
+          productos,
+
+        fecha:
+          new Date().toISOString()
+
       });
 
 
@@ -327,7 +334,7 @@ async function guardarBaseDB() {
 
 
 // =====================================================
-// LEER PRODUCTOS DESDE INDEXEDDB
+// LEER BASE
 // =====================================================
 
 async function cargarBaseDB() {
@@ -382,7 +389,7 @@ async function cargarBaseDB() {
 
 
 // =====================================================
-// CREAR ÍNDICE
+// ÍNDICE
 // =====================================================
 
 function construirIndice() {
@@ -420,7 +427,7 @@ function construirIndice() {
 
 
 // =====================================================
-// MOSTRAR FECHA
+// FECHA
 // =====================================================
 
 function mostrarFecha(fecha) {
@@ -446,7 +453,7 @@ function mostrarFecha(fecha) {
 
 
 // =====================================================
-// CARGAR BASE AL ABRIR
+// CARGAR AL ABRIR
 // =====================================================
 
 async function cargarBaseLocal() {
@@ -505,18 +512,12 @@ async function cargarBaseLocal() {
     }
 
 
-    // No existe una base local.
-
     descargarBase();
 
 
   } catch(error) {
 
-    console.error(
-      "Error leyendo IndexedDB:",
-      error
-    );
-
+    console.error(error);
 
     descargarBase();
 
@@ -526,7 +527,7 @@ async function cargarBaseLocal() {
 
 
 // =====================================================
-// DESCARGAR BASE DESDE GOOGLE SHEETS
+// DESCARGAR DESDE GOOGLE
 // =====================================================
 
 function descargarBase() {
@@ -639,7 +640,7 @@ function descargarBase() {
 
 
 // =====================================================
-// USAR BASE ANTERIOR
+// BASE ANTERIOR
 // =====================================================
 
 async function usarBaseAnterior() {
@@ -664,7 +665,7 @@ async function usarBaseAnterior() {
       document.getElementById(
         "mensaje"
       ).innerText =
-        "Conéctate a Internet para descargar la base.";
+        "Necesitas Internet para descargar la base.";
 
 
       return;
@@ -708,7 +709,7 @@ async function usarBaseAnterior() {
 
 
 // =====================================================
-// ACTUALIZAR MANUALMENTE
+// ACTUALIZAR
 // =====================================================
 
 function actualizarBase() {
@@ -733,7 +734,7 @@ function actualizarBase() {
 
 
 // =====================================================
-// INICIAR CÁMARA
+// CÁMARA
 // =====================================================
 
 function iniciarScanner() {
@@ -791,8 +792,7 @@ function iniciarScanner() {
 
     function(error) {
 
-      // Errores normales
-      // de lectura: ignorar.
+      // Ignorar errores normales.
 
     }
 
@@ -912,7 +912,7 @@ function buscarProductoLocal(
 
 
 // =====================================================
-// MOSTRAR PRODUCTO
+// MOSTRAR
 // =====================================================
 
 function mostrarProducto(
@@ -971,7 +971,7 @@ function mostrarProducto(
 
 
 // =====================================================
-// LIMPIAR RESULTADO
+// LIMPIAR
 // =====================================================
 
 function limpiarResultado() {
@@ -1004,7 +1004,47 @@ function limpiarResultado() {
 
 
 // =====================================================
-// INICIAR
+// SERVICE WORKER / PWA
+// =====================================================
+
+if (
+  "serviceWorker" in navigator
+) {
+
+  window.addEventListener(
+    "load",
+    function() {
+
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then(
+          function() {
+
+            console.log(
+              "Service Worker registrado"
+            );
+
+          }
+        )
+        .catch(
+          function(error) {
+
+            console.error(
+              "Error registrando Service Worker:",
+              error
+            );
+
+          }
+        );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// INICIO
 // =====================================================
 
 cargarBaseLocal();
