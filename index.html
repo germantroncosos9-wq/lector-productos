@@ -20,10 +20,28 @@ src="https://unpkg.com/html5-qrcode"
 type="text/javascript">
 </script>
 
+
 <style>
 
 /* =====================================================
-   ESTILO GENERAL
+   COLORES
+===================================================== */
+
+:root {
+  --verde: #00843D;
+  --verde-oscuro: #006B32;
+  --verde-claro: #E8F5EE;
+  --amarillo: #FFD500;
+  --blanco: #FFFFFF;
+  --fondo: #F4F7F5;
+  --gris: #667085;
+  --gris-claro: #E5E7EB;
+  --texto: #1F2937;
+}
+
+
+/* =====================================================
+   GENERAL
 ===================================================== */
 
 * {
@@ -33,8 +51,8 @@ type="text/javascript">
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
-  background: #f3f7f4;
-  color: #1f2933;
+  background: var(--fondo);
+  color: var(--texto);
 }
 
 
@@ -43,71 +61,31 @@ body {
 ===================================================== */
 
 .header {
-  background: #00843D;
-  color: white;
-  padding: 18px 20px 22px;
-  border-radius: 0 0 24px 24px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+  background: white;
+  padding: 14px 15px 17px;
+  border-bottom: 5px solid var(--verde);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
 }
 
 .logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
 }
 
-.cruz {
-  width: 38px;
-  height: 38px;
-  background: white;
-  color: #00843D;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 25px;
-  font-weight: bold;
-}
-
-.titulo {
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
+.logo img {
+  display: block;
+  width: 210px;
+  max-width: 80%;
+  height: auto;
 }
 
 .subtitulo {
   text-align: center;
-  margin-top: 5px;
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-
-/* =====================================================
-   ESTADO
-===================================================== */
-
-.estado-box {
-  margin: 18px auto;
-  max-width: 500px;
-  padding: 10px 16px;
-  background: white;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 2px 7px rgba(0,0,0,0.08);
-}
-
-#estado {
+  margin-top: 7px;
+  color: var(--verde);
   font-size: 14px;
   font-weight: bold;
-  color: #00843D;
-}
-
-#fecha {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #6b7280;
 }
 
 
@@ -123,27 +101,54 @@ body {
 
 
 /* =====================================================
+   ESTADO
+===================================================== */
+
+.estado-box {
+  margin: 16px auto;
+  background: white;
+  border-radius: 14px;
+  padding: 11px 15px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+#estado {
+  color: var(--verde);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#fecha {
+  color: var(--gris);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+
+/* =====================================================
    ESCÁNER
 ===================================================== */
 
 .scanner-card {
   background: white;
   border-radius: 18px;
-  padding: 12px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+  padding: 13px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.09);
 }
 
 .scanner-titulo {
   text-align: center;
-  color: #00843D;
+  color: var(--verde);
   font-weight: bold;
-  margin: 5px 0 12px;
+  font-size: 15px;
+  margin-bottom: 12px;
 }
 
 #reader {
   width: 100%;
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: 13px;
 }
 
 
@@ -152,11 +157,11 @@ body {
 ===================================================== */
 
 #mensaje {
-  margin: 15px 0;
   text-align: center;
-  font-size: 16px;
+  margin: 14px 0;
+  font-size: 15px;
   font-weight: bold;
-  color: #00843D;
+  color: var(--verde);
 }
 
 
@@ -167,59 +172,96 @@ body {
 .resultado-card {
   background: white;
   border-radius: 18px;
-  margin-top: 18px;
-  padding: 20px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
-  border-top: 5px solid #00843D;
+  margin-top: 16px;
+  padding: 18px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.09);
 }
 
 .resultado-titulo {
-  color: #00843D;
-  font-size: 14px;
+  color: var(--verde);
+  font-size: 13px;
   font-weight: bold;
-  margin-bottom: 18px;
-}
-
-.dato {
-  margin-bottom: 17px;
-}
-
-.dato:last-child {
-  margin-bottom: 0;
-}
-
-.titulo-dato {
-  color: #7b8794;
-  font-size: 12px;
+  margin-bottom: 13px;
   text-transform: uppercase;
-  margin-bottom: 4px;
 }
 
-.valor {
-  font-size: 18px;
+
+/* =====================================================
+   CÓDIGO INTERNO
+===================================================== */
+
+.codigo-card {
+  background: var(--verde);
+  color: white;
+  border-radius: 16px;
+  padding: 18px 15px;
+  margin-bottom: 15px;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0,132,61,0.25);
+}
+
+.codigo-label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  opacity: 0.95;
+  margin-bottom: 6px;
   font-weight: bold;
+}
+
+.codigo-valor {
+  font-size: 38px;
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: 1px;
   word-break: break-word;
 }
 
 
 /* =====================================================
-   PRECIOS
+   DESCRIPTOR
 ===================================================== */
 
-.precio-principal {
-  background: #e8f5ee;
+.descriptor {
+  padding: 4px 2px 14px;
+}
+
+.descriptor-label {
+  color: var(--gris);
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.descriptor-valor {
+  font-size: 19px;
+  font-weight: bold;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+
+/* =====================================================
+   PRECIO
+===================================================== */
+
+.precio {
+  background: #F7F8F8;
   border-radius: 14px;
-  padding: 15px;
-  margin: 5px 0 14px;
+  padding: 14px 16px;
+  margin-top: 5px;
 }
 
-.precio-principal .titulo-dato {
-  color: #00843D;
+.precio-label {
+  color: var(--gris);
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
 }
 
-.precio-principal .valor {
-  color: #00843D;
-  font-size: 32px;
+.precio-valor {
+  color: var(--texto);
+  font-size: 27px;
+  font-weight: 800;
 }
 
 
@@ -227,19 +269,61 @@ body {
    PRECIO OAI
 ===================================================== */
 
-.precio-oai {
-  background: #f1f8f4;
+.oai {
+  background: var(--verde-claro);
+  border: 2px solid var(--verde);
   border-radius: 14px;
-  padding: 15px;
+  padding: 15px 16px;
+  margin-top: 12px;
+  box-shadow: 0 2px 7px rgba(0,132,61,0.12);
 }
 
-.precio-oai .titulo-dato {
-  color: #00843D;
+.oai-label {
+  color: var(--verde);
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 3px;
 }
 
-.precio-oai .valor {
-  color: #006b32;
-  font-size: 25px;
+.oai-valor {
+  color: var(--verde-oscuro);
+  font-size: 31px;
+  font-weight: 900;
+}
+
+
+/* =====================================================
+   OCULTAR OAI
+===================================================== */
+
+.oculto {
+  display: none !important;
+}
+
+
+/* =====================================================
+   CÓDIGO DE BARRAS
+===================================================== */
+
+.barras {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--gris-claro);
+}
+
+.barras-label {
+  color: var(--gris);
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.barras-valor {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  word-break: break-word;
 }
 
 
@@ -252,38 +336,39 @@ button {
   border: none;
   border-radius: 14px;
   padding: 16px;
-  margin-top: 14px;
+  margin-top: 13px;
   font-size: 17px;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 0.1s, opacity 0.1s;
 }
 
 button:active {
   transform: scale(0.98);
+  opacity: 0.9;
 }
 
 #actualizar {
-  background: #00843D;
+  background: var(--verde);
   color: white;
 }
 
 #escanear {
   background: white;
-  color: #00843D;
-  border: 2px solid #00843D;
+  color: var(--verde);
+  border: 2px solid var(--verde);
 }
 
 
 /* =====================================================
-   PIE
+   FOOTER
 ===================================================== */
 
 .footer {
   text-align: center;
-  color: #8a969f;
+  color: #98A2B3;
   font-size: 11px;
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 </style>
@@ -302,13 +387,9 @@ button:active {
 
   <div class="logo">
 
-    <div class="cruz">
-      +
-    </div>
-
-    <div class="titulo">
-      CRUZ VERDE
-    </div>
+    <img
+      src="https://commons.wikimedia.org/wiki/Special:FilePath/Logotipo_Cruz_Verde.svg"
+      alt="Cruz Verde">
 
   </div>
 
@@ -364,74 +445,86 @@ button:active {
 <div class="resultado-card">
 
   <div class="resultado-titulo">
-    INFORMACIÓN DEL PRODUCTO
+    Información del producto
   </div>
 
 
-  <div class="dato">
+  <!-- CÓDIGO INTERNO -->
 
-    <div class="titulo-dato">
-      Código interno
+  <div class="codigo-card">
+
+    <div class="codigo-label">
+      CÓDIGO INTERNO
     </div>
 
     <div
-      class="valor"
+      class="codigo-valor"
       id="codigoInterno">
     </div>
 
   </div>
 
 
-  <div class="dato">
+  <!-- DESCRIPTOR -->
 
-    <div class="titulo-dato">
+  <div class="descriptor">
+
+    <div class="descriptor-label">
       Descriptor
     </div>
 
     <div
-      class="valor"
+      class="descriptor-valor"
       id="descriptor">
     </div>
 
   </div>
 
 
-  <div class="precio-principal">
+  <!-- PRECIO -->
 
-    <div class="titulo-dato">
+  <div class="precio">
+
+    <div class="precio-label">
       Precio
     </div>
 
     <div
-      class="valor"
+      class="precio-valor"
       id="precio">
     </div>
 
   </div>
 
 
-  <div class="precio-oai">
+  <!-- PRECIO OAI -->
 
-    <div class="titulo-dato">
-      Precio OAI
+  <div
+    class="oai oculto"
+    id="oaiCard">
+
+    <div class="oai-label">
+      🟢 PRECIO OAI
     </div>
 
     <div
-      class="valor"
+      class="oai-valor"
       id="precioOAI">
     </div>
 
   </div>
 
 
-  <div class="dato" style="margin-top:17px;">
+  <!-- CÓDIGO DE BARRAS -->
 
-    <div class="titulo-dato">
+  <div class="barras">
+
+    <div class="barras-label">
       Código de barras
     </div>
 
     <div
-      class="valor"
+      class="barras-valor"
       id="barras">
     </div>
 
@@ -464,7 +557,7 @@ button:active {
 
 <div class="footer">
 
-  Base de productos local · Búsqueda instantánea
+  Base local · Búsqueda instantánea
 
 </div>
 
@@ -823,7 +916,7 @@ async function cargarBaseLocal() {
 
 
 // =====================================================
-// DESCARGAR DESDE GOOGLE
+// DESCARGAR
 // =====================================================
 
 function descargarBase() {
@@ -865,12 +958,8 @@ function descargarBase() {
         await guardarBaseDB();
 
 
-        const fecha =
-          new Date();
-
-
         mostrarFecha(
-          fecha
+          new Date()
         );
 
 
@@ -961,7 +1050,7 @@ async function usarBaseAnterior() {
       document.getElementById(
         "mensaje"
       ).innerText =
-        "Conéctate a Internet para descargar la base.";
+        "Necesitas Internet para descargar la base.";
 
 
       return;
@@ -1005,7 +1094,7 @@ async function usarBaseAnterior() {
 
 
 // =====================================================
-// ACTUALIZAR PRODUCTOS
+// ACTUALIZAR
 // =====================================================
 
 function actualizarBase() {
@@ -1030,7 +1119,7 @@ function actualizarBase() {
 
 
 // =====================================================
-// INICIAR ESCÁNER
+// ESCÁNER
 // =====================================================
 
 function iniciarScanner() {
@@ -1249,19 +1338,52 @@ function mostrarProducto(
 
 
   document.getElementById(
-    "precioOAI"
-  ).innerText =
-    producto[
-      "PRECIOOAI"
-    ] || "-";
-
-
-  document.getElementById(
     "barras"
   ).innerText =
     producto[
       "BARRAS"
     ] || "-";
+
+
+  const oaiCard =
+    document.getElementById(
+      "oaiCard"
+    );
+
+
+  const precioOAI =
+    String(
+      producto["PRECIOOAI"] || ""
+    ).trim();
+
+
+  if (
+    precioOAI !== ""
+  ) {
+
+    document.getElementById(
+      "precioOAI"
+    ).innerText =
+      precioOAI;
+
+
+    oaiCard.classList.remove(
+      "oculto"
+    );
+
+  } else {
+
+    document.getElementById(
+      "precioOAI"
+    ).innerText =
+      "";
+
+
+    oaiCard.classList.add(
+      "oculto"
+    );
+
+  }
 
 }
 
@@ -1295,6 +1417,13 @@ function limpiarResultado() {
   document.getElementById(
     "barras"
   ).innerText = "";
+
+
+  document.getElementById(
+    "oaiCard"
+  ).classList.add(
+    "oculto"
+  );
 
 }
 
