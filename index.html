@@ -37,6 +37,13 @@ h1 {
 #estado {
   text-align: center;
   color: #666;
+  margin-bottom: 5px;
+}
+
+#fecha {
+  text-align: center;
+  color: #888;
+  font-size: 13px;
   margin-bottom: 20px;
 }
 
@@ -106,8 +113,10 @@ button {
 <h1>📦 Lector de Productos</h1>
 
 <div id="estado">
-Cargando productos...
+Cargando...
 </div>
+
+<div id="fecha"></div>
 
 <div id="reader"></div>
 
@@ -146,7 +155,8 @@ Preparando lector...
 </div>
 
 
-<button id="actualizar"
+<button
+id="actualizar"
 onclick="actualizarBase()">
 
 🔄 ACTUALIZAR PRODUCTOS
@@ -181,93 +191,6 @@ let indice = {};
 let scanner = null;
 
 let escaneando = false;
-
-
-// =====================================================
-// CARGAR BASE USANDO JSONP
-// =====================================================
-
-function cargarBase() {
-
-  document.getElementById("estado").innerText =
-    "⬇️ Descargando productos...";
-
-
-  const callback =
-    "recibirProductos_" + Date.now();
-
-
-  window[callback] = function(data) {
-
-    try {
-
-      if (!Array.isArray(data)) {
-
-        throw new Error(
-          "La respuesta no es una lista"
-        );
-
-      }
-
-
-      productos = data;
-
-      construirIndice();
-
-      guardarBaseLocal();
-
-
-      document.getElementById("estado").innerText =
-        "✅ " + productos.length +
-        " productos cargados";
-
-
-      document.getElementById("mensaje").innerText =
-        "📷 Apunta la cámara a un código de barras";
-
-
-      delete window[callback];
-
-
-      iniciarScanner();
-
-    } catch (error) {
-
-      console.error(error);
-
-      usarBaseLocal();
-
-    }
-
-  };
-
-
-  const script =
-    document.createElement("script");
-
-
-  script.src =
-    API_URL +
-    "?accion=productos&callback=" +
-    callback;
-
-
-  script.onerror = function() {
-
-    console.error(
-      "No se pudo descargar la base"
-    );
-
-    delete window[callback];
-
-    usarBaseLocal();
-
-  };
-
-
-  document.body.appendChild(script);
-
-}
 
 
 // =====================================================
@@ -319,68 +242,19 @@ function guardarBaseLocal() {
     );
 
 
+    const fecha =
+      new Date();
+
+
     localStorage.setItem(
       "fechaActualizacion",
-      new Date().toISOString()
+      fecha.toISOString()
     );
 
-  } catch(error) {
 
-    console.error(
-      "Error guardando base",
-      error
+    mostrarFecha(
+      fecha
     );
-
-  }
-
-}
-
-
-// =====================================================
-// USAR BASE LOCAL
-// =====================================================
-
-function usarBaseLocal() {
-
-  try {
-
-    const guardada =
-      localStorage.getItem("productos");
-
-
-    if (!guardada) {
-
-      document.getElementById("estado").innerText =
-        "❌ No se pudo conectar con Google Sheets";
-
-
-      document.getElementById("mensaje").innerText =
-        "Conéctate a Internet e intenta nuevamente.";
-
-
-      return;
-
-    }
-
-
-    productos =
-      JSON.parse(guardada);
-
-
-    construirIndice();
-
-
-    document.getElementById("estado").innerText =
-      "📱 Usando " +
-      productos.length +
-      " productos guardados";
-
-
-    document.getElementById("mensaje").innerText =
-      "📷 Lector disponible";
-
-
-    iniciarScanner();
 
   } catch(error) {
 
@@ -392,57 +266,170 @@ function usarBaseLocal() {
 
 
 // =====================================================
-// ACTUALIZAR BASE
+// MOSTRAR FECHA
 // =====================================================
 
-function actualizarBase() {
+function mostrarFecha(fecha) {
 
-  document.getElementById("estado").innerText =
-    "⬇️ Actualizando productos...";
-
-
-  const callback =
-    "actualizacion_" + Date.now();
+  if (!fecha) {
+    return;
+  }
 
 
-  window[callback] = function(data) {
+  const fechaLocal =
+    new Date(fecha);
 
-    if (!Array.isArray(data)) {
 
-      document.getElementById("estado").innerText =
-        "❌ Error al actualizar.";
+  document.getElementById("fecha").innerText =
+    "🕐 Última actualización: " +
+    fechaLocal.toLocaleString(
+      "es-CL"
+    );
 
-      delete window[callback];
+}
+
+
+// =====================================================
+// CARGAR BASE LOCAL AL ABRIR
+// =====================================================
+
+function cargarBaseLocal() {
+
+  try {
+
+    const guardada =
+      localStorage.getItem(
+        "productos"
+      );
+
+
+    const fecha =
+      localStorage.getItem(
+        "fechaActualizacion"
+      );
+
+
+    if (!guardada) {
+
+      // No existe una base todavía.
+      // Hay que descargarla.
+
+      descargarBase();
 
       return;
 
     }
 
 
-    productos = data;
+    productos =
+      JSON.parse(
+        guardada
+      );
+
 
     construirIndice();
 
-    guardarBaseLocal();
+
+    if (fecha) {
+
+      mostrarFecha(
+        fecha
+      );
+
+    }
 
 
     document.getElementById("estado").innerText =
-      "✅ " +
+      "📱 " +
       productos.length +
-      " productos actualizados";
+      " productos";
 
 
     document.getElementById("mensaje").innerText =
       "📷 Listo para escanear";
 
 
-    delete window[callback];
+    iniciarScanner();
 
-  };
+  } catch(error) {
+
+    console.error(error);
+
+    descargarBase();
+
+  }
+
+}
+
+
+// =====================================================
+// DESCARGAR BASE DESDE GOOGLE
+// =====================================================
+
+function descargarBase() {
+
+  document.getElementById("estado").innerText =
+    "⬇️ Descargando productos...";
+
+
+  const callback =
+    "productos_" +
+    Date.now();
+
+
+  window[callback] =
+    function(data) {
+
+      try {
+
+        if (!Array.isArray(data)) {
+
+          throw new Error(
+            "Respuesta incorrecta"
+          );
+
+        }
+
+
+        productos =
+          data;
+
+
+        construirIndice();
+
+        guardarBaseLocal();
+
+
+        document.getElementById("estado").innerText =
+          "✅ " +
+          productos.length +
+          " productos";
+
+
+        document.getElementById("mensaje").innerText =
+          "📷 Listo para escanear";
+
+
+        delete window[callback];
+
+
+        iniciarScanner();
+
+      } catch(error) {
+
+        console.error(error);
+
+        usarBaseLocal();
+
+      }
+
+    };
 
 
   const script =
-    document.createElement("script");
+    document.createElement(
+      "script"
+    );
 
 
   script.src =
@@ -451,23 +438,118 @@ function actualizarBase() {
     callback;
 
 
-  script.onerror = function() {
+  script.onerror =
+    function() {
 
-    document.getElementById("estado").innerText =
-      "❌ No se pudo actualizar.";
+      delete window[callback];
 
-    delete window[callback];
+      usarBaseLocal();
 
-  };
+    };
 
 
-  document.body.appendChild(script);
+  document.body.appendChild(
+    script
+  );
 
 }
 
 
 // =====================================================
-// CÁMARA
+// USAR BASE LOCAL
+// =====================================================
+
+function usarBaseLocal() {
+
+  const guardada =
+    localStorage.getItem(
+      "productos"
+    );
+
+
+  if (!guardada) {
+
+    document.getElementById("estado").innerText =
+      "❌ No hay productos disponibles";
+
+
+    document.getElementById("mensaje").innerText =
+      "Necesitas Internet para descargar la base.";
+
+
+    return;
+
+  }
+
+
+  productos =
+    JSON.parse(
+      guardada
+    );
+
+
+  construirIndice();
+
+
+  const fecha =
+    localStorage.getItem(
+      "fechaActualizacion"
+    );
+
+
+  if (fecha) {
+
+    mostrarFecha(
+      fecha
+    );
+
+  }
+
+
+  document.getElementById("estado").innerText =
+    "📱 Usando copia local";
+
+
+  document.getElementById("mensaje").innerText =
+    "📷 Listo para escanear";
+
+
+  iniciarScanner();
+
+}
+
+
+// =====================================================
+// ACTUALIZAR MANUALMENTE
+// =====================================================
+
+function actualizarBase() {
+
+  if (
+    !confirm(
+      "¿Actualizar la base de productos?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  detenerScanner();
+
+
+  document.getElementById("estado").innerText =
+    "⬇️ Actualizando productos...";
+
+
+  descargarBase();
+
+}
+
+
+// =====================================================
+// INICIAR CÁMARA
 // =====================================================
 
 function iniciarScanner() {
@@ -479,9 +561,6 @@ function iniciarScanner() {
 
   if (productos.length === 0) {
 
-    document.getElementById("mensaje").innerText =
-      "⏳ Esperando productos...";
-
     return;
 
   }
@@ -491,13 +570,16 @@ function iniciarScanner() {
 
 
   scanner =
-    new Html5Qrcode("reader");
+    new Html5Qrcode(
+      "reader"
+    );
 
 
   scanner.start(
 
     {
-      facingMode: "environment"
+      facingMode:
+        "environment"
     },
 
     {
@@ -515,6 +597,7 @@ function iniciarScanner() {
 
       detenerScanner();
 
+
       buscarProductoLocal(
         codigoDetectado
       );
@@ -531,16 +614,19 @@ function iniciarScanner() {
   )
 
 
-  .catch(function(error) {
+  .catch(
+    function(error) {
 
-    console.error(error);
+      console.error(error);
 
-    escaneando = false;
+      escaneando = false;
 
-    document.getElementById("mensaje").innerText =
-      "❌ No se pudo acceder a la cámara.";
 
-  });
+      document.getElementById("mensaje").innerText =
+        "❌ No se pudo acceder a la cámara.";
+
+    }
+  );
 
 }
 
@@ -562,34 +648,40 @@ function detenerScanner() {
 
   scanner.stop()
 
-    .then(function() {
+    .then(
+      function() {
 
-      scanner.clear();
+        scanner.clear();
 
-      scanner = null;
+        scanner = null;
 
-      escaneando = false;
+        escaneando = false;
 
-    })
+      }
+    )
 
-    .catch(function(error) {
+    .catch(
+      function(error) {
 
-      console.error(error);
+        console.error(error);
 
-      scanner = null;
+        scanner = null;
 
-      escaneando = false;
+        escaneando = false;
 
-    });
+      }
+    );
 
 }
 
 
 // =====================================================
-// BUSCAR LOCALMENTE
+// BÚSQUEDA LOCAL
 // =====================================================
 
-function buscarProductoLocal(codigo) {
+function buscarProductoLocal(
+  codigo
+) {
 
   const inicio =
     performance.now();
@@ -603,7 +695,8 @@ function buscarProductoLocal(codigo) {
 
   const tiempo =
     Math.round(
-      performance.now() - inicio
+      performance.now() -
+      inicio
     );
 
 
@@ -665,7 +758,7 @@ function mostrarProducto(
 
 
 // =====================================================
-// LIMPIAR
+// LIMPIAR RESULTADO
 // =====================================================
 
 function limpiarResultado() {
@@ -692,7 +785,7 @@ function limpiarResultado() {
 // INICIAR
 // =====================================================
 
-cargarBase();
+cargarBaseLocal();
 
 
 </script>
