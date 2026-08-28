@@ -10,10 +10,8 @@
 
   <title>Lector de Productos</title>
 
-  <script
-    src="https://unpkg.com/html5-qrcode"
-    type="text/javascript">
-  </script>
+  <script src="https://unpkg.com/html5-qrcode"
+          type="text/javascript"></script>
 
   <style>
 
@@ -25,14 +23,14 @@
       color: #222;
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
     .contenedor {
       max-width: 500px;
       margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     #reader {
@@ -44,6 +42,12 @@
       overflow: hidden;
     }
 
+    #mensaje {
+      text-align: center;
+      margin: 20px 0;
+      font-size: 18px;
+    }
+
     #resultado {
       background: white;
       padding: 20px;
@@ -53,24 +57,19 @@
     }
 
     .dato {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     .titulo {
       font-size: 13px;
       color: #777;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
 
     .valor {
       font-size: 20px;
       font-weight: bold;
-    }
-
-    #mensaje {
-      text-align: center;
-      margin: 15px 0;
-      font-size: 18px;
+      word-break: break-word;
     }
 
     button {
@@ -91,97 +90,93 @@
 
 <body>
 
-  <div class="contenedor">
+<div class="contenedor">
 
-    <h1>📦 Lector de Productos</h1>
+  <h1>📦 Lector de Productos</h1>
 
-    <div id="reader"></div>
+  <div id="reader"></div>
 
-    <div id="mensaje">
-      Apunta la cámara a un código de barras
-    </div>
+  <div id="mensaje">
+    📷 Apunta la cámara a un código de barras
+  </div>
 
-    <div id="resultado">
 
-      <div class="dato">
+  <div id="resultado">
 
-        <div class="titulo">
-          CODIGO INTERNO
-        </div>
+    <div class="dato">
 
-        <div class="valor"
-             id="codigoInterno">
-        </div>
-
+      <div class="titulo">
+        CODIGO INTERNO
       </div>
 
-
-      <div class="dato">
-
-        <div class="titulo">
-          DESCRIPTOR
-        </div>
-
-        <div class="valor"
-             id="descriptor">
-        </div>
-
-      </div>
-
-
-      <div class="dato">
-
-        <div class="titulo">
-          PRECIO
-        </div>
-
-        <div class="valor"
-             id="precio">
-        </div>
-
-      </div>
-
-
-      <div class="dato">
-
-        <div class="titulo">
-          PRECIO OAI
-        </div>
-
-        <div class="valor"
-             id="precioOAI">
-        </div>
-
-      </div>
-
-
-      <div class="dato">
-
-        <div class="titulo">
-          BARRAS
-        </div>
-
-        <div class="valor"
-             id="barras">
-        </div>
-
+      <div class="valor" id="codigoInterno">
       </div>
 
     </div>
 
 
-    <button onclick="iniciarScanner()">
-      📷 ESCANEAR NUEVAMENTE
-    </button>
+    <div class="dato">
+
+      <div class="titulo">
+        DESCRIPTOR
+      </div>
+
+      <div class="valor" id="descriptor">
+      </div>
+
+    </div>
+
+
+    <div class="dato">
+
+      <div class="titulo">
+        PRECIO
+      </div>
+
+      <div class="valor" id="precio">
+      </div>
+
+    </div>
+
+
+    <div class="dato">
+
+      <div class="titulo">
+        PRECIO OAI
+      </div>
+
+      <div class="valor" id="precioOAI">
+      </div>
+
+    </div>
+
+
+    <div class="dato">
+
+      <div class="titulo">
+        BARRAS
+      </div>
+
+      <div class="valor" id="barras">
+      </div>
+
+    </div>
 
   </div>
+
+
+  <button onclick="iniciarScanner()">
+    📷 ESCANEAR NUEVAMENTE
+  </button>
+
+</div>
 
 
 <script>
 
 
 // ======================================================
-// CONFIGURACIÓN
+// URL DE APPS SCRIPT
 // ======================================================
 
 const API_URL =
@@ -194,7 +189,7 @@ let escaneando = false;
 
 
 // ======================================================
-// INICIAR CÁMARA
+// CÁMARA
 // ======================================================
 
 function iniciarScanner() {
@@ -225,7 +220,6 @@ function iniciarScanner() {
         width: 300,
         height: 150
       }
-
     },
 
 
@@ -251,8 +245,8 @@ function iniciarScanner() {
 
     function(error) {
 
-      // Los errores de lectura normales
-      // se ignoran.
+      // Ignorar errores normales
+      // mientras busca el código.
 
     }
 
@@ -280,8 +274,11 @@ function iniciarScanner() {
 function detenerScanner() {
 
   if (!scanner) {
+
     escaneando = false;
+
     return;
+
   }
 
 
@@ -320,44 +317,57 @@ function buscarProducto(codigo) {
     "🔎 Buscando producto...";
 
 
+  // Creamos un nombre único para la función
+  // que recibirá la respuesta de Apps Script.
+
+  const callback =
+    "respuestaProducto_" + Date.now();
+
+
+  // Creamos la función global.
+
+  window[callback] = function(respuesta) {
+
+    mostrarProducto(respuesta);
+
+    // Eliminamos la función después de utilizarla.
+
+    delete window[callback];
+
+  };
+
+
+  // Creamos la URL.
+
   const url =
     API_URL +
     "?codigo=" +
-    encodeURIComponent(codigo);
+    encodeURIComponent(codigo) +
+    "&callback=" +
+    callback;
 
 
-  fetch(url)
+  // Creamos un <script>.
+  // Esto evita el problema de CORS de fetch().
 
-    .then(function(response) {
-
-      if (!response.ok) {
-
-        throw new Error(
-          "Error HTTP " + response.status
-        );
-
-      }
-
-      return response.json();
-
-    })
+  const script =
+    document.createElement("script");
 
 
-    .then(function(data) {
-
-      mostrarProducto(data);
-
-    })
+  script.src = url;
 
 
-    .catch(function(error) {
+  script.onerror = function() {
 
-      console.error(error);
+    document.getElementById("mensaje").innerText =
+      "⚠️ No se pudo conectar con Google Sheets.";
 
-      document.getElementById("mensaje").innerText =
-        "⚠️ Error al consultar el producto.";
+    delete window[callback];
 
-    });
+  };
+
+
+  document.body.appendChild(script);
 
 }
 
@@ -366,10 +376,25 @@ function buscarProducto(codigo) {
 // MOSTRAR PRODUCTO
 // ======================================================
 
-function mostrarProducto(data) {
+function mostrarProducto(respuesta) {
+
+  console.log(
+    "Respuesta de Apps Script:",
+    respuesta
+  );
 
 
-  if (!data.encontrado) {
+  if (!respuesta) {
+
+    document.getElementById("mensaje").innerText =
+      "⚠️ Respuesta vacía.";
+
+    return;
+
+  }
+
+
+  if (!respuesta.encontrado) {
 
     document.getElementById("mensaje").innerText =
       "❌ Producto no encontrado.";
@@ -381,7 +406,8 @@ function mostrarProducto(data) {
   }
 
 
-  const producto = data.producto;
+  const producto =
+    respuesta.producto;
 
 
   document.getElementById("mensaje").innerText =
@@ -411,7 +437,7 @@ function mostrarProducto(data) {
 
 
 // ======================================================
-// LIMPIAR RESULTADO
+// LIMPIAR
 // ======================================================
 
 function limpiarResultado() {
@@ -435,7 +461,7 @@ function limpiarResultado() {
 
 
 // ======================================================
-// INICIAR AUTOMÁTICAMENTE
+// INICIAR
 // ======================================================
 
 iniciarScanner();
