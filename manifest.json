@@ -1,0 +1,10 @@
+{
+  "name": "Lector de Productos",
+  "short_name": "Lector",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f4f4",
+  "theme_color": "#1976d2",
+  "orientation": "portrait",
+  "description": "Lector de códigos de barras y consulta de productos"
+}
