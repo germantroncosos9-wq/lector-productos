@@ -1,24 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
   <title>Lector de Productos</title>
 
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript">
+  </script>
 
   <style>
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
       background: #f4f4f4;
-      text-align: center;
+      color: #222;
     }
 
     h1 {
-      margin-bottom: 25px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .contenedor {
+      max-width: 500px;
+      margin: auto;
     }
 
     #reader {
@@ -31,96 +45,404 @@
     }
 
     #resultado {
-      max-width: 450px;
-      margin: 25px auto;
-      padding: 20px;
       background: white;
+      padding: 20px;
       border-radius: 12px;
-      font-size: 20px;
+      margin-top: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    .codigo {
-      font-size: 28px;
+    .dato {
+      margin-bottom: 16px;
+    }
+
+    .titulo {
+      font-size: 13px;
+      color: #777;
+      margin-bottom: 4px;
+    }
+
+    .valor {
+      font-size: 20px;
       font-weight: bold;
-      margin-top: 10px;
-      word-break: break-all;
+    }
+
+    #mensaje {
+      text-align: center;
+      margin: 15px 0;
+      font-size: 18px;
     }
 
     button {
-      margin-top: 20px;
-      padding: 15px 25px;
-      font-size: 18px;
+      width: 100%;
+      padding: 15px;
+      margin-top: 15px;
       border: none;
       border-radius: 10px;
-      cursor: pointer;
+      font-size: 18px;
+      background: #222;
+      color: white;
     }
+
   </style>
+
 </head>
+
 
 <body>
 
-  <h1>📦 Lector de Productos</h1>
+  <div class="contenedor">
 
-  <div id="reader"></div>
+    <h1>📦 Lector de Productos</h1>
 
-  <div id="resultado">
-    Escanea un código de barras
-    <div class="codigo" id="codigo"></div>
+    <div id="reader"></div>
+
+    <div id="mensaje">
+      Apunta la cámara a un código de barras
+    </div>
+
+    <div id="resultado">
+
+      <div class="dato">
+
+        <div class="titulo">
+          CODIGO INTERNO
+        </div>
+
+        <div class="valor"
+             id="codigoInterno">
+        </div>
+
+      </div>
+
+
+      <div class="dato">
+
+        <div class="titulo">
+          DESCRIPTOR
+        </div>
+
+        <div class="valor"
+             id="descriptor">
+        </div>
+
+      </div>
+
+
+      <div class="dato">
+
+        <div class="titulo">
+          PRECIO
+        </div>
+
+        <div class="valor"
+             id="precio">
+        </div>
+
+      </div>
+
+
+      <div class="dato">
+
+        <div class="titulo">
+          PRECIO OAI
+        </div>
+
+        <div class="valor"
+             id="precioOAI">
+        </div>
+
+      </div>
+
+
+      <div class="dato">
+
+        <div class="titulo">
+          BARRAS
+        </div>
+
+        <div class="valor"
+             id="barras">
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <button onclick="iniciarScanner()">
+      📷 ESCANEAR NUEVAMENTE
+    </button>
+
   </div>
 
-  <button onclick="iniciarScanner()">
-    📷 Escanear nuevamente
-  </button>
 
-  <script>
+<script>
 
-    let scanner;
 
-    function iniciarScanner() {
+// ======================================================
+// CONFIGURACIÓN
+// ======================================================
 
-      document.getElementById("codigo").innerText = "";
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
-      scanner = new Html5Qrcode("reader");
 
-      scanner.start(
-        { facingMode: "environment" },
+let scanner = null;
 
-        {
-          fps: 10,
-          qrbox: {
-            width: 300,
-            height: 150
-          }
-        },
+let escaneando = false;
 
-        function(codigoDetectado) {
 
-          document.getElementById("codigo").innerText =
-            codigoDetectado;
+// ======================================================
+// INICIAR CÁMARA
+// ======================================================
 
-          scanner.stop().catch(function(error) {
-            console.log(error);
-          });
+function iniciarScanner() {
 
-        },
+  if (escaneando) {
+    return;
+  }
 
-        function(error) {
-          // Errores normales mientras intenta detectar el código.
-        }
+  escaneando = true;
 
-      ).catch(function(error) {
+  document.getElementById("mensaje").innerText =
+    "📷 Buscando código...";
 
-        document.getElementById("codigo").innerText =
-          "No se pudo acceder a la cámara.";
 
-        console.error(error);
+  scanner = new Html5Qrcode("reader");
 
-      });
+
+  scanner.start(
+
+    {
+      facingMode: "environment"
+    },
+
+    {
+      fps: 10,
+
+      qrbox: {
+        width: 300,
+        height: 150
+      }
+
+    },
+
+
+    function(codigoDetectado) {
+
+      console.log(
+        "Código detectado:",
+        codigoDetectado
+      );
+
+
+      detenerScanner();
+
+
+      document.getElementById("mensaje").innerText =
+        "🔎 Buscando producto...";
+
+
+      buscarProducto(codigoDetectado);
+
+    },
+
+
+    function(error) {
+
+      // Los errores de lectura normales
+      // se ignoran.
+
     }
 
-    iniciarScanner();
+  )
 
-  </script>
+
+  .catch(function(error) {
+
+    console.error(error);
+
+    escaneando = false;
+
+    document.getElementById("mensaje").innerText =
+      "❌ No se pudo acceder a la cámara.";
+
+  });
+
+}
+
+
+// ======================================================
+// DETENER CÁMARA
+// ======================================================
+
+function detenerScanner() {
+
+  if (!scanner) {
+    escaneando = false;
+    return;
+  }
+
+
+  scanner.stop()
+
+    .then(function() {
+
+      scanner.clear();
+
+      scanner = null;
+
+      escaneando = false;
+
+    })
+
+    .catch(function(error) {
+
+      console.error(error);
+
+      scanner = null;
+
+      escaneando = false;
+
+    });
+
+}
+
+
+// ======================================================
+// BUSCAR PRODUCTO
+// ======================================================
+
+function buscarProducto(codigo) {
+
+  document.getElementById("mensaje").innerText =
+    "🔎 Buscando producto...";
+
+
+  const url =
+    API_URL +
+    "?codigo=" +
+    encodeURIComponent(codigo);
+
+
+  fetch(url)
+
+    .then(function(response) {
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Error HTTP " + response.status
+        );
+
+      }
+
+      return response.json();
+
+    })
+
+
+    .then(function(data) {
+
+      mostrarProducto(data);
+
+    })
+
+
+    .catch(function(error) {
+
+      console.error(error);
+
+      document.getElementById("mensaje").innerText =
+        "⚠️ Error al consultar el producto.";
+
+    });
+
+}
+
+
+// ======================================================
+// MOSTRAR PRODUCTO
+// ======================================================
+
+function mostrarProducto(data) {
+
+
+  if (!data.encontrado) {
+
+    document.getElementById("mensaje").innerText =
+      "❌ Producto no encontrado.";
+
+    limpiarResultado();
+
+    return;
+
+  }
+
+
+  const producto = data.producto;
+
+
+  document.getElementById("mensaje").innerText =
+    "✅ Producto encontrado";
+
+
+  document.getElementById("codigoInterno").innerText =
+    producto["CODIGO INTERNO"] || "-";
+
+
+  document.getElementById("descriptor").innerText =
+    producto["DESCRIPTOR"] || "-";
+
+
+  document.getElementById("precio").innerText =
+    producto["PRECIO"] || "-";
+
+
+  document.getElementById("precioOAI").innerText =
+    producto["PRECIOOAI"] || "-";
+
+
+  document.getElementById("barras").innerText =
+    producto["BARRAS"] || "-";
+
+}
+
+
+// ======================================================
+// LIMPIAR RESULTADO
+// ======================================================
+
+function limpiarResultado() {
+
+  document.getElementById("codigoInterno").innerText =
+    "";
+
+  document.getElementById("descriptor").innerText =
+    "";
+
+  document.getElementById("precio").innerText =
+    "";
+
+  document.getElementById("precioOAI").innerText =
+    "";
+
+  document.getElementById("barras").innerText =
+    "";
+
+}
+
+
+// ======================================================
+// INICIAR AUTOMÁTICAMENTE
+// ======================================================
+
+iniciarScanner();
+
+
+</script>
 
 </body>
+
 </html>
