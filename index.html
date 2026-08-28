@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 
@@ -8,11 +9,11 @@
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0">
 
-<title>Lector de Productos</title>
+<meta name="theme-color" content="#00843D">
 
 <link rel="manifest" href="./manifest.json">
 
-<meta name="theme-color" content="#1976d2">
+<title>Lector de Productos</title>
 
 <script
 src="https://unpkg.com/html5-qrcode"
@@ -21,88 +22,268 @@ type="text/javascript">
 
 <style>
 
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f4f4f4;
-  color: #222;
+/* =====================================================
+   ESTILO GENERAL
+===================================================== */
+
+* {
+  box-sizing: border-box;
 }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f3f7f4;
+  color: #1f2933;
+}
+
+
+/* =====================================================
+   ENCABEZADO
+===================================================== */
+
+.header {
+  background: #00843D;
+  color: white;
+  padding: 18px 20px 22px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cruz {
+  width: 38px;
+  height: 38px;
+  background: white;
+  color: #00843D;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.titulo {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.subtitulo {
+  text-align: center;
+  margin-top: 5px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+
+/* =====================================================
+   ESTADO
+===================================================== */
+
+.estado-box {
+  margin: 18px auto;
+  max-width: 500px;
+  padding: 10px 16px;
+  background: white;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 7px rgba(0,0,0,0.08);
+}
+
+#estado {
+  font-size: 14px;
+  font-weight: bold;
+  color: #00843D;
+}
+
+#fecha {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+
+/* =====================================================
+   CONTENEDOR
+===================================================== */
 
 .contenedor {
   max-width: 500px;
   margin: auto;
+  padding: 0 15px 30px;
 }
 
-h1 {
-  text-align: center;
+
+/* =====================================================
+   ESCÁNER
+===================================================== */
+
+.scanner-card {
+  background: white;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
 }
 
-#estado {
+.scanner-titulo {
   text-align: center;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-#fecha {
-  text-align: center;
-  color: #888;
-  font-size: 13px;
-  margin-bottom: 20px;
+  color: #00843D;
+  font-weight: bold;
+  margin: 5px 0 12px;
 }
 
 #reader {
   width: 100%;
-  max-width: 450px;
-  margin: auto;
-  background: white;
-  border-radius: 12px;
   overflow: hidden;
+  border-radius: 14px;
 }
+
+
+/* =====================================================
+   MENSAJE
+===================================================== */
 
 #mensaje {
+  margin: 15px 0;
   text-align: center;
-  margin: 20px 0;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #00843D;
 }
 
-#resultado {
+
+/* =====================================================
+   RESULTADO
+===================================================== */
+
+.resultado-card {
   background: white;
+  border-radius: 18px;
+  margin-top: 18px;
   padding: 20px;
-  border-radius: 12px;
-  margin-top: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+  border-top: 5px solid #00843D;
 }
 
-.dato {
+.resultado-titulo {
+  color: #00843D;
+  font-size: 14px;
+  font-weight: bold;
   margin-bottom: 18px;
 }
 
-.titulo {
-  font-size: 13px;
-  color: #777;
-  margin-bottom: 5px;
+.dato {
+  margin-bottom: 17px;
+}
+
+.dato:last-child {
+  margin-bottom: 0;
+}
+
+.titulo-dato {
+  color: #7b8794;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
 .valor {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   word-break: break-word;
 }
 
+
+/* =====================================================
+   PRECIOS
+===================================================== */
+
+.precio-principal {
+  background: #e8f5ee;
+  border-radius: 14px;
+  padding: 15px;
+  margin: 5px 0 14px;
+}
+
+.precio-principal .titulo-dato {
+  color: #00843D;
+}
+
+.precio-principal .valor {
+  color: #00843D;
+  font-size: 32px;
+}
+
+
+/* =====================================================
+   PRECIO OAI
+===================================================== */
+
+.precio-oai {
+  background: #f1f8f4;
+  border-radius: 14px;
+  padding: 15px;
+}
+
+.precio-oai .titulo-dato {
+  color: #00843D;
+}
+
+.precio-oai .valor {
+  color: #006b32;
+  font-size: 25px;
+}
+
+
+/* =====================================================
+   BOTONES
+===================================================== */
+
 button {
   width: 100%;
-  padding: 15px;
-  margin-top: 15px;
   border: none;
-  border-radius: 10px;
-  font-size: 18px;
-  background: #222;
-  color: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 14px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.98);
 }
 
 #actualizar {
-  background: #1976d2;
+  background: #00843D;
+  color: white;
+}
+
+#escanear {
+  background: white;
+  color: #00843D;
+  border: 2px solid #00843D;
+}
+
+
+/* =====================================================
+   PIE
+===================================================== */
+
+.footer {
+  text-align: center;
+  color: #8a969f;
+  font-size: 11px;
+  margin-top: 20px;
 }
 
 </style>
@@ -112,66 +293,181 @@ button {
 
 <body>
 
+
+<!-- ===================================================
+     ENCABEZADO
+=================================================== -->
+
+<div class="header">
+
+  <div class="logo">
+
+    <div class="cruz">
+      +
+    </div>
+
+    <div class="titulo">
+      CRUZ VERDE
+    </div>
+
+  </div>
+
+  <div class="subtitulo">
+    Lector de Productos
+  </div>
+
+</div>
+
+
 <div class="contenedor">
 
-<h1>📦 Lector de Productos</h1>
 
-<div id="estado">
-Cargando...
+<!-- ===================================================
+     ESTADO
+=================================================== -->
+
+<div class="estado-box">
+
+  <div id="estado">
+    Cargando productos...
+  </div>
+
+  <div id="fecha"></div>
+
 </div>
 
-<div id="fecha"></div>
 
-<div id="reader"></div>
+<!-- ===================================================
+     ESCÁNER
+=================================================== -->
+
+<div class="scanner-card">
+
+  <div class="scanner-titulo">
+    📷 ESCANEAR PRODUCTO
+  </div>
+
+  <div id="reader"></div>
+
+</div>
+
 
 <div id="mensaje">
-Preparando lector...
+  Preparando lector...
 </div>
 
 
-<div id="resultado">
+<!-- ===================================================
+     RESULTADO
+=================================================== -->
 
-<div class="dato">
-<div class="titulo">CODIGO INTERNO</div>
-<div class="valor" id="codigoInterno"></div>
+<div class="resultado-card">
+
+  <div class="resultado-titulo">
+    INFORMACIÓN DEL PRODUCTO
+  </div>
+
+
+  <div class="dato">
+
+    <div class="titulo-dato">
+      Código interno
+    </div>
+
+    <div
+      class="valor"
+      id="codigoInterno">
+    </div>
+
+  </div>
+
+
+  <div class="dato">
+
+    <div class="titulo-dato">
+      Descriptor
+    </div>
+
+    <div
+      class="valor"
+      id="descriptor">
+    </div>
+
+  </div>
+
+
+  <div class="precio-principal">
+
+    <div class="titulo-dato">
+      Precio
+    </div>
+
+    <div
+      class="valor"
+      id="precio">
+    </div>
+
+  </div>
+
+
+  <div class="precio-oai">
+
+    <div class="titulo-dato">
+      Precio OAI
+    </div>
+
+    <div
+      class="valor"
+      id="precioOAI">
+    </div>
+
+  </div>
+
+
+  <div class="dato" style="margin-top:17px;">
+
+    <div class="titulo-dato">
+      Código de barras
+    </div>
+
+    <div
+      class="valor"
+      id="barras">
+    </div>
+
+  </div>
+
 </div>
 
-<div class="dato">
-<div class="titulo">DESCRIPTOR</div>
-<div class="valor" id="descriptor"></div>
-</div>
 
-<div class="dato">
-<div class="titulo">PRECIO</div>
-<div class="valor" id="precio"></div>
-</div>
+<!-- ===================================================
+     BOTONES
+=================================================== -->
 
-<div class="dato">
-<div class="titulo">PRECIO OAI</div>
-<div class="valor" id="precioOAI"></div>
-</div>
+<button
+  id="actualizar"
+  onclick="actualizarBase()">
 
-<div class="dato">
-<div class="titulo">BARRAS</div>
-<div class="valor" id="barras"></div>
-</div>
-
-</div>
-
-
-<button id="actualizar"
-        onclick="actualizarBase()">
-
-🔄 ACTUALIZAR PRODUCTOS
+  🔄 ACTUALIZAR PRODUCTOS
 
 </button>
 
 
-<button onclick="iniciarScanner()">
+<button
+  id="escanear"
+  onclick="iniciarScanner()">
 
-📷 ESCANEAR NUEVAMENTE
+  📷 ESCANEAR NUEVAMENTE
 
 </button>
+
+
+<div class="footer">
+
+  Base de productos local · Búsqueda instantánea
+
+</div>
+
 
 </div>
 
@@ -389,7 +685,7 @@ async function cargarBaseDB() {
 
 
 // =====================================================
-// ÍNDICE
+// CREAR ÍNDICE
 // =====================================================
 
 function construirIndice() {
@@ -453,7 +749,7 @@ function mostrarFecha(fecha) {
 
 
 // =====================================================
-// CARGAR AL ABRIR
+// CARGAR BASE LOCAL
 // =====================================================
 
 async function cargarBaseLocal() {
@@ -493,7 +789,7 @@ async function cargarBaseLocal() {
       document.getElementById(
         "estado"
       ).innerText =
-        "📱 " +
+        "🟢 " +
         productos.length +
         " productos";
 
@@ -581,7 +877,7 @@ function descargarBase() {
         document.getElementById(
           "estado"
         ).innerText =
-          "✅ " +
+          "🟢 " +
           productos.length +
           " productos";
 
@@ -640,7 +936,7 @@ function descargarBase() {
 
 
 // =====================================================
-// BASE ANTERIOR
+// USAR BASE ANTERIOR
 // =====================================================
 
 async function usarBaseAnterior() {
@@ -665,7 +961,7 @@ async function usarBaseAnterior() {
       document.getElementById(
         "mensaje"
       ).innerText =
-        "Necesitas Internet para descargar la base.";
+        "Conéctate a Internet para descargar la base.";
 
 
       return;
@@ -688,7 +984,7 @@ async function usarBaseAnterior() {
     document.getElementById(
       "estado"
     ).innerText =
-      "📱 Usando copia local";
+      "🟢 Usando copia local";
 
 
     document.getElementById(
@@ -709,7 +1005,7 @@ async function usarBaseAnterior() {
 
 
 // =====================================================
-// ACTUALIZAR
+// ACTUALIZAR PRODUCTOS
 // =====================================================
 
 function actualizarBase() {
@@ -734,7 +1030,7 @@ function actualizarBase() {
 
 
 // =====================================================
-// CÁMARA
+// INICIAR ESCÁNER
 // =====================================================
 
 function iniciarScanner() {
@@ -819,7 +1115,7 @@ function iniciarScanner() {
 
 
 // =====================================================
-// DETENER CÁMARA
+// DETENER ESCÁNER
 // =====================================================
 
 function detenerScanner() {
@@ -912,7 +1208,7 @@ function buscarProductoLocal(
 
 
 // =====================================================
-// MOSTRAR
+// MOSTRAR PRODUCTO
 // =====================================================
 
 function mostrarProducto(
@@ -971,7 +1267,7 @@ function mostrarProducto(
 
 
 // =====================================================
-// LIMPIAR
+// LIMPIAR RESULTADO
 // =====================================================
 
 function limpiarResultado() {
@@ -1004,7 +1300,7 @@ function limpiarResultado() {
 
 
 // =====================================================
-// SERVICE WORKER / PWA
+// SERVICE WORKER
 // =====================================================
 
 if (
@@ -1055,3 +1351,4 @@ cargarBaseLocal();
 </body>
 
 </html>
+```
