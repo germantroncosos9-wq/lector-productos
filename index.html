@@ -24,6 +24,126 @@
       --rojo: #D92D20;
     }
 
+    /* ===== TEMAS ===== */
+    body[data-theme="default"] {
+      --verde: #00843d;
+      --verde-oscuro: #006b31;
+      --verde-suave: #e8f5ee;
+      --fondo: #f4f6f5;
+      --tarjeta: #ffffff;
+      --texto: #1f2a24;
+      --texto-suave: #66706b;
+      --borde: #dfe7e2;
+      --input: #ffffff;
+      --sombra: rgba(0, 0, 0, 0.08);
+      --oai-fondo: #eaf8ef;
+      --oai-borde: #b9e3c8;
+    }
+
+    body[data-theme="dark"] {
+      --verde: #2ecc71;
+      --verde-oscuro: #20b862;
+      --verde-suave: #183126;
+      --fondo: #111714;
+      --tarjeta: #1b2420;
+      --texto: #f2f7f4;
+      --texto-suave: #aab8b0;
+      --borde: #33423a;
+      --input: #141c18;
+      --sombra: rgba(0, 0, 0, 0.30);
+      --oai-fondo: #193326;
+      --oai-borde: #2c6a45;
+    }
+
+    body[data-theme="pink"] {
+      --verde: #d56f9d;
+      --verde-oscuro: #b95784;
+      --verde-suave: #fdebf3;
+      --fondo: #fff6fa;
+      --tarjeta: #fffafd;
+      --texto: #563947;
+      --texto-suave: #8d6b7b;
+      --borde: #f1ccdc;
+      --input: #ffffff;
+      --sombra: rgba(181, 87, 132, 0.10);
+      --oai-fondo: #ffeaf3;
+      --oai-borde: #f0b8d0;
+    }
+
+    body {
+      background: var(--fondo) !important;
+      color: var(--texto) !important;
+      transition: background-color .25s ease, color .25s ease;
+    }
+
+    .tema-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px 0 10px;
+      flex-wrap: wrap;
+    }
+
+    .tema-btn {
+      appearance: none;
+      border: 1px solid var(--borde);
+      background: var(--tarjeta);
+      color: var(--texto);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      padding: 0;
+      font-size: 19px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 7px var(--sombra);
+      transition: transform .15s ease, border-color .15s ease, background-color .15s ease;
+    }
+
+    .tema-btn:active {
+      transform: scale(.97);
+    }
+
+    .tema-btn.activo {
+      background: var(--verde);
+      border-color: var(--verde);
+      color: #fff;
+    }
+
+    /* Adaptaciones visuales para los temas */
+    body[data-theme="dark"] .card,
+    body[data-theme="dark"] .status-card,
+    body[data-theme="dark"] .result-card,
+    body[data-theme="dark"] .search-box,
+    body[data-theme="dark"] input {
+      background: var(--tarjeta) !important;
+      color: var(--texto) !important;
+      border-color: var(--borde) !important;
+    }
+
+    body[data-theme="dark"] input::placeholder {
+      color: #819087;
+    }
+
+    body[data-theme="dark"] .app-intro p,
+    body[data-theme="dark"] footer,
+    body[data-theme="pink"] .app-intro p,
+    body[data-theme="pink"] footer {
+      color: var(--texto-suave) !important;
+    }
+
+    body[data-theme="pink"] .app-intro h2,
+    body[data-theme="pink"] .codigo-label,
+    body[data-theme="pink"] .codigo-valor {
+      color: var(--verde-oscuro) !important;
+    }
+
+    body[data-theme="pink"] button:not(.tema-btn) {
+      background-color: var(--verde) !important;
+      border-color: var(--verde) !important;
+    }
+
+
     * {
       box-sizing: border-box;
     }
@@ -306,7 +426,7 @@
 
 </head>
 
-<body>
+<body data-theme="default">
 
 <div class="contenedor">
 
@@ -421,7 +541,14 @@
 
   </div>
 
-  <footer>
+  
+    <div class="tema-selector" aria-label="Seleccionar tema">
+      <button class="tema-btn activo" type="button" data-set-theme="default" aria-label="Tema clásico" title="Tema clásico">🌿</button>
+      <button class="tema-btn" type="button" data-set-theme="dark" aria-label="Tema nocturno" title="Tema nocturno">🌙</button>
+      <button class="tema-btn" type="button" data-set-theme="pink" aria-label="Tema rosa pastel" title="Tema rosa pastel">🌸</button>
+    </div>
+
+<footer>
     Creado por Germán · CV11
   </footer>
 
@@ -1644,6 +1771,41 @@
 
   iniciar();
 
+</script>
+
+
+<script>
+(function () {
+  const THEME_KEY = "lectorProductosTema";
+  const validThemes = ["default", "dark", "pink"];
+
+  function applyTheme(theme) {
+    if (!validThemes.includes(theme)) theme = "default";
+    document.body.setAttribute("data-theme", theme);
+
+    document.querySelectorAll("[data-set-theme]").forEach(btn => {
+      btn.classList.toggle("activo", btn.dataset.setTheme === theme);
+    });
+
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {}
+  }
+
+  let savedTheme = "default";
+  try {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (validThemes.includes(stored)) savedTheme = stored;
+  } catch (e) {}
+
+  applyTheme(savedTheme);
+
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-set-theme]");
+    if (!btn) return;
+    applyTheme(btn.dataset.setTheme);
+  });
+})();
 </script>
 
 </body>
