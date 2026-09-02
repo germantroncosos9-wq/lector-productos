@@ -268,6 +268,8 @@
       }
     }
   </style>
+  <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
+
 </head>
 
 <body>
@@ -1241,135 +1243,311 @@
 
   async function iniciarEscaner() {
 
-    /*
-      Intentamos utilizar BarcodeDetector
-      cuando el navegador lo soporta.
-    */
+    const esIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-    if (
-      "BarcodeDetector" in window
-    ) {
+    let overlay = null;
+    let video = null;
+    let stream = null;
+    let controlesZXing = null;
+    let cerrado = false;
+
+    function crearVisor() {
+
+      overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.background = "#000";
+      overlay.style.zIndex = "9999";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+
+      video = document.createElement("video");
+      video.autoplay = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.style.width = "100%";
+      video.style.height = "100%";
+      video.style.objectFit = "cover";
+
+      const marco = document.createElement("div");
+      marco.style.position = "absolute";
+      marco.style.left = "10%";
+      marco.style.right = "10%";
+      marco.style.top = "38%";
+      marco.style.height = "24%";
+      marco.style.border = "3px solid #FFD500";
+      marco.style.borderRadius = "18px";
+      marco.style.boxShadow = "0 0 0 9999px rgba(0,0,0,0.20)";
+      marco.style.pointerEvents = "none";
+
+      const texto = document.createElement("div");
+      texto.textContent = "Apunta la cámara al código de barras";
+      texto.style.position = "absolute";
+      texto.style.top = "20px";
+      texto.style.left = "20px";
+      texto.style.right = "20px";
+      texto.style.color = "white";
+      texto.style.textAlign = "center";
+      texto.style.fontWeight = "bold";
+      texto.style.fontSize = "16px";
+      texto.style.textShadow = "0 2px 4px rgba(0,0,0,0.8)";
+
+      const cerrar = document.createElement("button");
+      cerrar.textContent = "✕ CERRAR";
+      cerrar.style.position = "absolute";
+      cerrar.style.bottom = "28px";
+      cerrar.style.left = "50%";
+      cerrar.style.transform = "translateX(-50%)";
+      cerrar.style.zIndex = "10001";
+      cerrar.style.background = "white";
+      cerrar.style.color = "#00843D";
+      cerrar.style.padding = "13px 20px";
+      cerrar.style.borderRadius = "12px";
+      cerrar.style.fontWeight = "bold";
+
+      cerrar.onclick = detenerEscaner;
+
+      overlay.appendChild(video);
+      overlay.appendChild(marco);
+      overlay.appendChild(texto);
+      overlay.appendChild(cerrar);
+      document.body.appendChild(overlay);
+
+    }
+
+    function detenerEscaner() {
+
+      if (cerrado) {
+        return;
+      }
+
+      cerrado = true;
+
+      try {
+        if (controlesZXing && typeof controlesZXing.stop === "function") {
+          controlesZXing.stop();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      try {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      if (video && video.srcObject) {
+        try {
+          video.srcObject.getTracks().forEach(track => track.stop());
+        } catch (error) {
+          console.error(error);
+        }
+        video.srcObject = null;
+      }
+
+      if (overlay) {
+        overlay.remove();
+      }
+
+    }
+
+    function codigoDetectado(codigo) {
+
+      if (!codigo || cerrado) {
+        return;
+      }
+
+      const valor = String(codigo).trim();
+
+      if (!valor) {
+        return;
+      }
+
+      detenerEscaner();
+
+      const input = document.getElementById("codigoInput");
+      input.value = valor;
+
+      buscarProductoLocal(valor);
+
+    }
+
+    crearVisor();
+
+    /*
+      iPhone/iPad: usamos ZXing directamente porque Safari no ofrece
+      BarcodeDetector de forma suficientemente consistente.
+    */
+    if (esIOS) {
 
       try {
 
-        const formatos =
-          await BarcodeDetector
-            .getSupportedFormats();
+        if (
+          typeof ZXingBrowser === "undefined" ||
+          !ZXingBrowser.BrowserMultiFormatReader
+        ) {
+          throw new Error("ZXing no está disponible");
+        }
 
-        const detector =
-          new BarcodeDetector({
-            formats: formatos
-          });
+        const lector =
+          new ZXingBrowser.BrowserMultiFormatReader();
 
-        const stream =
-          await navigator.mediaDevices
-            .getUserMedia({
-              video: {
-                facingMode: {
-                  ideal: "environment"
-                }
-              }
-            });
+        const restricciones = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
 
-        const video =
-          document.createElement("video");
+        controlesZXing =
+          await lector.decodeFromConstraints(
+            restricciones,
+            video,
+            function(resultado, error, controles) {
 
-        video.style.position =
-          "fixed";
-
-        video.style.top = "0";
-        video.style.left = "0";
-        video.style.width = "100%";
-        video.style.height = "100%";
-        video.style.objectFit = "cover";
-        video.style.zIndex = "9999";
-
-        video.autoplay = true;
-        video.playsInline = true;
-
-        document.body.appendChild(
-          video
-        );
-
-        video.srcObject =
-          stream;
-
-        const detener =
-          function() {
-
-            stream
-              .getTracks()
-              .forEach(
-                track =>
-                  track.stop()
-              );
-
-            video.remove();
-
-          };
-
-
-        const buscar =
-          async function() {
-
-            try {
-
-              const detecciones =
-                await detector.detect(
-                  video
-                );
-
-              if (
-                detecciones.length > 0
-              ) {
-
-                const codigo =
-                  detecciones[0].rawValue;
-
-                detener();
-
-                document
-                  .getElementById(
-                    "codigoInput"
-                  )
-                  .value = codigo;
-
-                buscarProductoLocal(
-                  codigo
-                );
-
-                return;
-
+              if (controles && !controlesZXing) {
+                controlesZXing = controles;
               }
 
-            } catch (error) {
-
-              console.error(error);
+              if (resultado) {
+                codigoDetectado(resultado.getText());
+              }
 
             }
-
-            requestAnimationFrame(
-              buscar
-            );
-
-          };
-
-        buscar();
+          );
 
         return;
 
       } catch (error) {
 
-        console.error(error);
+        console.error("Error ZXing iOS:", error);
+        detenerEscaner();
+
+        alert(
+          "No se pudo iniciar la cámara. Revisa que Safari tenga permiso para usar la cámara y vuelve a intentarlo."
+        );
+
+        return;
 
       }
 
     }
 
+    /*
+      Android/Chrome y navegadores compatibles:
+      mantenemos BarcodeDetector, que ya funcionaba en tu versión actual.
+    */
+    if ("BarcodeDetector" in window) {
 
-    alert(
-      "El escáner de cámara no está disponible en este navegador. Puedes usar un lector de códigos de barras que escriba directamente en el campo de búsqueda."
-    );
+      try {
+
+        const formatos =
+          await BarcodeDetector.getSupportedFormats();
+
+        const detector =
+          new BarcodeDetector({ formats: formatos });
+
+        stream =
+          await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: { ideal: "environment" }
+            }
+          });
+
+        video.srcObject = stream;
+        await video.play();
+
+        const buscar = async function() {
+
+          if (cerrado) {
+            return;
+          }
+
+          try {
+
+            const detecciones =
+              await detector.detect(video);
+
+            if (detecciones.length > 0) {
+              codigoDetectado(detecciones[0].rawValue);
+              return;
+            }
+
+          } catch (error) {
+            console.error(error);
+          }
+
+          requestAnimationFrame(buscar);
+
+        };
+
+        buscar();
+        return;
+
+      } catch (error) {
+        console.error("Error BarcodeDetector:", error);
+      }
+
+    }
+
+    /*
+      Fallback ZXing para otros navegadores móviles.
+    */
+    try {
+
+      if (
+        typeof ZXingBrowser === "undefined" ||
+        !ZXingBrowser.BrowserMultiFormatReader
+      ) {
+        throw new Error("ZXing no está disponible");
+      }
+
+      const lector =
+        new ZXingBrowser.BrowserMultiFormatReader();
+
+      controlesZXing =
+        await lector.decodeFromConstraints(
+          {
+            audio: false,
+            video: {
+              facingMode: { ideal: "environment" }
+            }
+          },
+          video,
+          function(resultado, error, controles) {
+
+            if (controles && !controlesZXing) {
+              controlesZXing = controles;
+            }
+
+            if (resultado) {
+              codigoDetectado(resultado.getText());
+            }
+
+          }
+        );
+
+    } catch (error) {
+
+      console.error("Error al iniciar el escáner:", error);
+      detenerEscaner();
+
+      alert(
+        "No se pudo iniciar el lector de cámara. Asegúrate de abrir la página mediante HTTPS y permitir el acceso a la cámara."
+      );
+
+    }
 
   }
 
