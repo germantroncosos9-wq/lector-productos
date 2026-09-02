@@ -585,6 +585,69 @@
      Ambas apuntan al mismo producto.
   ========================================================= */
 
+  /*
+     Convierte un código a una forma comparable ignorando ceros
+     innecesarios al comienzo.
+
+     Ejemplo:
+       000074312017995 -> 074312017995
+
+     IMPORTANTE:
+     - NO modifica el código original guardado en los productos.
+     - El código original también se guarda en el índice.
+     - Así, si el lector entrega cualquiera de las dos formas,
+       el producto puede ser encontrado.
+  */
+
+  function codigoCanonico(codigo) {
+
+    const normalizado =
+      normalizarCodigo(codigo);
+
+    if (!normalizado) {
+      return "";
+    }
+
+    /*
+      Solo quitamos ceros al principio.
+      Si el código fuera "0000", dejamos "0" para
+      evitar convertirlo en una cadena vacía.
+    */
+
+    const sinCerosIniciales =
+      normalizado.replace(/^0+(?=\d)/, "");
+
+    return sinCerosIniciales;
+
+  }
+
+
+  /* =========================================================
+     CONSTRUIR ÍNDICE DE CÓDIGOS DE BARRA
+
+     Se guardan DOS formas del código:
+
+     1. El código tal como aparece en el archivo.
+     2. El mismo código sin ceros iniciales innecesarios.
+
+     Ejemplo:
+       Archivo: 000074312017995
+
+       Índice:
+       indice["000074312017995"] = producto
+       indice["074312017995"]  = producto
+
+     De esta forma el lector puede entregar:
+       000074312017995
+     o:
+       074312017995
+
+     y ambos encuentran el mismo producto.
+
+     Si hay varios códigos separados por coma, punto y coma,
+     salto de línea o "/", cada uno se indexa por separado.
+  ========================================================= */
+
   function construirIndice() {
 
     indice = {};
@@ -600,18 +663,6 @@
         continue;
       }
 
-      /*
-        Separamos únicamente dentro de la aplicación.
-
-        NO modificamos Google Sheets.
-
-        Se aceptan:
-        ,
-        ;
-        saltos de línea
-        /
-      */
-
       const codigos =
         barras.split(/[,\n;/]+/);
 
@@ -624,18 +675,25 @@
           continue;
         }
 
-        // Guardamos el código exactamente como viene.
+        /*
+          Primero guardamos el código EXACTO.
+          Esto hace que, si existe un producto con ese
+          código exacto, tenga prioridad.
+        */
         indice[codigo] = producto;
 
-        // Algunos códigos vienen con 3 ceros extra a la izquierda
-        // (ej.: 000074312017995 -> 074312017995).
-        // Creamos también esa variante para poder encontrar el producto
-        // sin modificar los datos originales de Google Sheets.
-        if (codigo.length === 15 && codigo.startsWith("000")) {
-          const codigoSinTresCeros = codigo.slice(3);
-          if (codigoSinTresCeros.length >= 8) {
-            indice[codigoSinTresCeros] = producto;
-          }
+        /*
+          Después guardamos la versión canónica.
+          Así se ignoran los ceros agregados al principio.
+        */
+        const canonico =
+          codigoCanonico(codigo);
+
+        if (
+          canonico &&
+          !indice[canonico]
+        ) {
+          indice[canonico] = producto;
         }
 
       }
@@ -643,7 +701,6 @@
     }
 
   }
-
 
   /* =========================================================
      MOSTRAR CANTIDAD
@@ -713,15 +770,25 @@
     const codigoNormalizado =
       normalizarCodigo(codigo);
 
+    /*
+      Primero buscamos el código EXACTO.
+      Si no existe, buscamos la versión canónica
+      sin ceros iniciales innecesarios.
+    */
+
     let producto =
       indice[codigoNormalizado];
 
-    // Si no existe coincidencia exacta, probamos la variante
-    // de 15 dígitos con 3 ceros extra al comienzo.
-    if (!producto && codigoNormalizado.length === 12) {
-      const codigoConTresCeros =
-        "000" + codigoNormalizado;
-      producto = indice[codigoConTresCeros];
+    if (!producto) {
+
+      const canonico =
+        codigoCanonico(codigoNormalizado);
+
+      if (canonico) {
+        producto =
+          indice[canonico];
+      }
+
     }
 
     const tiempo =
@@ -754,7 +821,6 @@
     );
 
   }
-
 
   /* =========================================================
      MOSTRAR PRODUCTO
@@ -1135,7 +1201,7 @@
 
         /*
           Los códigos de barra normalmente
-          tienen 8 o más dígitos.
+          tienen entre 8 y 14 dígitos.
 
           No buscamos demasiado pronto
           mientras todavía se está escaneando.
@@ -1145,7 +1211,8 @@
           normalizarCodigo(valor);
 
         if (
-          codigo.length >= 8
+          codigo.length >= 8 &&
+          codigo.length <= 14
         ) {
 
           if (
