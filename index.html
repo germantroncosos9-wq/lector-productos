@@ -518,6 +518,84 @@
       color: inherit !important;
     }
 
+
+    /* ===== AJUSTE FINAL DE CONTRASTE ===== */
+
+    /* NOCTURNO: tarjetas realmente oscuras */
+    body[data-theme="dark"] .producto-codigo,
+    body[data-theme="dark"] .producto-descriptor,
+    body[data-theme="dark"] .producto-precio,
+    body[data-theme="dark"] .producto-barras,
+    body[data-theme="dark"] .resultado > div,
+    body[data-theme="dark"] .result-card > div {
+      background-color: #1b2420 !important;
+      color: #f2f7f4 !important;
+    }
+
+    body[data-theme="dark"] .producto-codigo {
+      background-color: #24b966 !important;
+    }
+
+    body[data-theme="dark"] .producto-oai {
+      background-color: #193326 !important;
+      border-color: #2ecc71 !important;
+    }
+
+    body[data-theme="dark"] .descriptor-valor,
+    body[data-theme="dark"] .precio-valor,
+    body[data-theme="dark"] .barras-valor,
+    body[data-theme="dark"] #descriptor,
+    body[data-theme="dark"] #precio,
+    body[data-theme="dark"] #barras {
+      color: #f2f7f4 !important;
+    }
+
+    body[data-theme="dark"] .oai-valor,
+    body[data-theme="dark"] #precioOai {
+      color: #39dc80 !important;
+    }
+
+    /* ROSA: contraste más fuerte en código y botones */
+    body[data-theme="pink"] .producto-codigo {
+      background-color: #d76b9c !important;
+    }
+
+    body[data-theme="pink"] .producto-codigo *,
+    body[data-theme="pink"] .producto-codigo .codigo-label,
+    body[data-theme="pink"] .producto-codigo .codigo-valor,
+    body[data-theme="pink"] #codigoInterno {
+      color: #ffffff !important;
+    }
+
+    body[data-theme="pink"] .producto-oai {
+      background-color: #fff2f7 !important;
+      border-color: #e967a1 !important;
+    }
+
+    body[data-theme="pink"] .oai-valor,
+    body[data-theme="pink"] #precioOai {
+      color: #c94f87 !important;
+    }
+
+    /* Botones: nunca perder el texto */
+    body[data-theme="dark"] #btnActualizar,
+    body[data-theme="dark"] #btnEscanear,
+    body[data-theme="pink"] #btnActualizar,
+    body[data-theme="pink"] #btnEscanear {
+      color: #ffffff !important;
+    }
+
+    body[data-theme="dark"] #btnEscanear {
+      background-color: transparent !important;
+      color: #2ecc71 !important;
+      border-color: #2ecc71 !important;
+    }
+
+    /* En rosa ambos botones llevan texto visible */
+    body[data-theme="pink"] button:not(.tema-btn) {
+      color: #ffffff !important;
+    }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
