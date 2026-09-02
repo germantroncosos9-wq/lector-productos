@@ -1,677 +1,488 @@
 ```html
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<meta name="theme-color" content="#00843D">
-
-<link rel="manifest" href="./manifest.json">
-
-<title>Lector de Productos</title>
-
-<script
-src="https://unpkg.com/html5-qrcode"
-type="text/javascript">
-</script>
-
-
-<style>
-
-/* =====================================================
-   COLORES
-===================================================== */
-
-:root {
-  --verde: #00843D;
-  --verde-oscuro: #006B32;
-  --verde-claro: #E8F5EE;
-  --amarillo: #FFD500;
-  --blanco: #FFFFFF;
-  --fondo: #F4F7F5;
-  --gris: #667085;
-  --gris-claro: #E5E7EB;
-  --texto: #1F2937;
-}
-
-
-/* =====================================================
-   GENERAL
-===================================================== */
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--fondo);
-  color: var(--texto);
-}
-
-
-/* =====================================================
-   ENCABEZADO
-===================================================== */
-
-.header {
-  background: white;
-  padding: 14px 15px 17px;
-  border-bottom: 5px solid var(--verde);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo img {
-  display: block;
-  width: 210px;
-  max-width: 80%;
-  height: auto;
-}
-
-.subtitulo {
-  text-align: center;
-  margin-top: 7px;
-  color: var(--verde);
-  font-size: 14px;
-  font-weight: bold;
-}
-
-
-/* =====================================================
-   CONTENEDOR
-===================================================== */
-
-.contenedor {
-  max-width: 500px;
-  margin: auto;
-  padding: 0 15px 30px;
-}
-
-
-/* =====================================================
-   ESTADO
-===================================================== */
-
-.estado-box {
-  margin: 16px auto;
-  background: white;
-  border-radius: 14px;
-  padding: 11px 15px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-}
-
-#estado {
-  color: var(--verde);
-  font-size: 14px;
-  font-weight: bold;
-}
-
-#fecha {
-  color: var(--gris);
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-
-/* =====================================================
-   ESCÁNER
-===================================================== */
-
-.scanner-card {
-  background: white;
-  border-radius: 18px;
-  padding: 13px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.09);
-}
-
-.scanner-titulo {
-  text-align: center;
-  color: var(--verde);
-  font-weight: bold;
-  font-size: 15px;
-  margin-bottom: 12px;
-}
-
-#reader {
-  width: 100%;
-  overflow: hidden;
-  border-radius: 13px;
-}
-
-
-/* =====================================================
-   MENSAJE
-===================================================== */
-
-#mensaje {
-  text-align: center;
-  margin: 14px 0;
-  font-size: 15px;
-  font-weight: bold;
-  color: var(--verde);
-}
-
-
-/* =====================================================
-   RESULTADO
-===================================================== */
-
-.resultado-card {
-  background: white;
-  border-radius: 18px;
-  margin-top: 16px;
-  padding: 18px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.09);
-}
-
-.resultado-titulo {
-  color: var(--verde);
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 13px;
-  text-transform: uppercase;
-}
-
-
-/* =====================================================
-   CÓDIGO INTERNO
-===================================================== */
-
-.codigo-card {
-  background: var(--verde);
-  color: white;
-  border-radius: 16px;
-  padding: 18px 15px;
-  margin-bottom: 15px;
-  text-align: center;
-  box-shadow: 0 3px 8px rgba(0,132,61,0.25);
-}
-
-.codigo-label {
-  font-size: 12px;
-  letter-spacing: 1px;
-  opacity: 0.95;
-  margin-bottom: 6px;
-  font-weight: bold;
-}
-
-.codigo-valor {
-  font-size: 38px;
-  line-height: 1.1;
-  font-weight: 900;
-  letter-spacing: 1px;
-  word-break: break-word;
-}
-
-
-/* =====================================================
-   DESCRIPTOR
-===================================================== */
-
-.descriptor {
-  padding: 4px 2px 14px;
-}
-
-.descriptor-label {
-  color: var(--gris);
-  font-size: 11px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.descriptor-valor {
-  font-size: 19px;
-  font-weight: bold;
-  line-height: 1.25;
-  word-break: break-word;
-}
-
-
-/* =====================================================
-   PRECIO
-===================================================== */
-
-.precio {
-  background: #F7F8F8;
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-top: 5px;
-}
-
-.precio-label {
-  color: var(--gris);
-  font-size: 11px;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-
-.precio-valor {
-  color: var(--texto);
-  font-size: 27px;
-  font-weight: 800;
-}
-
-
-/* =====================================================
-   PRECIO OAI
-===================================================== */
-
-.oai {
-  background: var(--verde-claro);
-  border: 2px solid var(--verde);
-  border-radius: 14px;
-  padding: 15px 16px;
-  margin-top: 12px;
-  box-shadow: 0 2px 7px rgba(0,132,61,0.12);
-}
-
-.oai-label {
-  color: var(--verde);
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-
-.oai-valor {
-  color: var(--verde-oscuro);
-  font-size: 31px;
-  font-weight: 900;
-}
-
-
-/* =====================================================
-   OCULTAR OAI
-===================================================== */
-
-.oculto {
-  display: none !important;
-}
-
-
-/* =====================================================
-   CÓDIGO DE BARRAS
-===================================================== */
-
-.barras {
-  margin-top: 14px;
-  padding-top: 13px;
-  border-top: 1px solid var(--gris-claro);
-}
-
-.barras-label {
-  color: var(--gris);
-  font-size: 11px;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-
-.barras-valor {
-  font-size: 16px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  word-break: break-word;
-}
-
-
-/* =====================================================
-   BOTONES
-===================================================== */
-
-button {
-  width: 100%;
-  border: none;
-  border-radius: 14px;
-  padding: 16px;
-  margin-top: 13px;
-  font-size: 17px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.1s, opacity 0.1s;
-}
-
-button:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
-
-#actualizar {
-  background: var(--verde);
-  color: white;
-}
-
-#escanear {
-  background: white;
-  color: var(--verde);
-  border: 2px solid var(--verde);
-}
-
-
-/* =====================================================
-   FOOTER
-===================================================== */
-
-.footer {
-  text-align: center;
-  color: #98A2B3;
-  font-size: 11px;
-  margin-top: 18px;
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#00843D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <title>Lector de Productos</title>
+
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    :root {
+      --verde: #00843D;
+      --verde-oscuro: #006B32;
+      --verde-claro: #E8F5EE;
+      --amarillo: #FFD500;
+      --blanco: #FFFFFF;
+      --fondo: #F4F7F5;
+      --gris: #667085;
+      --gris-claro: #E5E7EB;
+      --texto: #1F2937;
+      --rojo: #D92D20;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    .contenedor {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    header {
+      background: var(--verde);
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    }
+
+    header img {
+      max-width: 150px;
+      max-height: 90px;
+      object-fit: contain;
+      background: white;
+      border-radius: 12px;
+      padding: 6px;
+    }
+
+    header h1 {
+      color: white;
+      font-size: 22px;
+      margin: 10px 0 0;
+    }
+
+    .estado {
+      text-align: center;
+      background: white;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--gris);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .estado strong {
+      color: var(--verde);
+    }
+
+    .buscador {
+      background: white;
+      border-radius: 18px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    }
+
+    .buscador input {
+      width: 100%;
+      border: 2px solid var(--gris-claro);
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 18px;
+      outline: none;
+      text-align: center;
+    }
+
+    .buscador input:focus {
+      border-color: var(--verde);
+    }
+
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .btn-actualizar {
+      flex: 1;
+      background: var(--verde);
+      color: white;
+    }
+
+    .btn-actualizar:hover {
+      background: var(--verde-oscuro);
+    }
+
+    .btn-escanear {
+      flex: 1;
+      background: white;
+      color: var(--verde);
+      border: 2px solid var(--verde);
+    }
+
+    .mensaje {
+      text-align: center;
+      padding: 15px;
+      color: var(--gris);
+      font-size: 15px;
+    }
+
+    .resultado {
+      display: none;
+    }
+
+    .tarjeta {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    }
+
+    .etiqueta {
+      color: var(--gris);
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .codigo-card {
+      background: var(--verde);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      border-radius: 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(0,132,61,0.22);
+    }
+
+    .codigo-card .etiqueta {
+      color: rgba(255,255,255,0.85);
+    }
+
+    .codigo-valor {
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    .precio-card {
+      text-align: center;
+    }
+
+    .precio-valor {
+      font-size: 27px;
+      font-weight: 800;
+    }
+
+    .oai-card {
+      background: var(--verde-claro);
+      border: 2px solid var(--verde);
+      text-align: center;
+    }
+
+    .oai-card .etiqueta {
+      color: var(--verde-oscuro);
+    }
+
+    .oai-valor {
+      color: var(--verde-oscuro);
+      font-size: 31px;
+      font-weight: 900;
+    }
+
+    .descriptor {
+      font-size: 19px;
+      font-weight: bold;
+      line-height: 1.35;
+    }
+
+    .barras {
+      font-size: 14px;
+      color: var(--gris);
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .tiempo {
+      text-align: center;
+      color: var(--gris);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .oculto {
+      display: none !important;
+    }
+
+    .error {
+      color: var(--rojo);
+      font-weight: bold;
+    }
+
+    .cargando {
+      color: var(--verde);
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--gris);
+      font-size: 11px;
+      padding: 15px 0 5px;
+    }
+
+    @media (max-width: 400px) {
+      .codigo-valor {
+        font-size: 32px;
+      }
+
+      .precio-valor {
+        font-size: 24px;
+      }
+
+      .oai-valor {
+        font-size: 28px;
+      }
+    }
+  </style>
 </head>
-
 
 <body>
 
-
-<!-- ===================================================
-     ENCABEZADO
-=================================================== -->
-
-<div class="header">
-
-  <div class="logo">
-
-    <img
-      src="https://commons.wikimedia.org/wiki/Special:FilePath/Logotipo_Cruz_Verde.svg"
-      alt="Cruz Verde">
-
-  </div>
-
-  <div class="subtitulo">
-    Lector de Productos
-  </div>
-
-</div>
-
-
 <div class="contenedor">
 
+  <header>
+    <img
+      src="https://commons.wikimedia.org/wiki/Special:FilePath/Logotipo_Cruz_Verde.svg"
+      alt="Cruz Verde"
+    >
+    <h1>Lector de Productos</h1>
+  </header>
 
-<!-- ===================================================
-     ESTADO
-=================================================== -->
+  <div class="estado">
+    <div>
+      Productos cargados:
+      <strong id="cantidadProductos">0</strong>
+    </div>
 
-<div class="estado-box">
-
-  <div id="estado">
-    Cargando productos...
+    <div>
+      Última actualización:
+      <strong id="ultimaActualizacion">Sin datos</strong>
+    </div>
   </div>
 
-  <div id="fecha"></div>
+  <div class="buscador">
 
-</div>
+    <input
+      type="text"
+      id="codigoInput"
+      placeholder="Escanea o escribe un código"
+      autocomplete="off"
+      inputmode="numeric"
+    >
 
+    <div class="botones">
 
-<!-- ===================================================
-     ESCÁNER
-=================================================== -->
+      <button
+        class="btn-actualizar"
+        onclick="actualizarProductos()"
+      >
+        🔄 ACTUALIZAR PRODUCTOS
+      </button>
 
-<div class="scanner-card">
+      <button
+        class="btn-escanear"
+        onclick="iniciarEscaner()"
+      >
+        📷 ESCANEAR
+      </button>
 
-  <div class="scanner-titulo">
-    📷 ESCANEAR PRODUCTO
+    </div>
+
   </div>
 
-  <div id="reader"></div>
-
-</div>
-
-
-<div id="mensaje">
-  Preparando lector...
-</div>
-
-
-<!-- ===================================================
-     RESULTADO
-=================================================== -->
-
-<div class="resultado-card">
-
-  <div class="resultado-titulo">
-    Información del producto
+  <div id="mensaje" class="mensaje">
+    Escanea o escribe un código de barras.
   </div>
 
+  <div id="resultado" class="resultado">
 
-  <!-- CÓDIGO INTERNO -->
+    <div class="codigo-card">
+      <div class="etiqueta">Código interno</div>
+      <div
+        class="codigo-valor"
+        id="codigoInterno"
+      ></div>
+    </div>
 
-  <div class="codigo-card">
+    <div class="tarjeta">
+      <div class="etiqueta">Descriptor</div>
+      <div
+        class="descriptor"
+        id="descriptor"
+      ></div>
+    </div>
 
-    <div class="codigo-label">
-      CÓDIGO INTERNO
+    <div class="tarjeta precio-card">
+      <div class="etiqueta">Precio</div>
+      <div
+        class="precio-valor"
+        id="precio"
+      ></div>
     </div>
 
     <div
-      class="codigo-valor"
-      id="codigoInterno">
+      class="tarjeta oai-card oculto"
+      id="oaiCard"
+    >
+      <div class="etiqueta">Precio OAI</div>
+      <div
+        class="oai-valor"
+        id="precioOAI"
+      ></div>
     </div>
 
-  </div>
-
-
-  <!-- DESCRIPTOR -->
-
-  <div class="descriptor">
-
-    <div class="descriptor-label">
-      Descriptor
-    </div>
-
-    <div
-      class="descriptor-valor"
-      id="descriptor">
-    </div>
-
-  </div>
-
-
-  <!-- PRECIO -->
-
-  <div class="precio">
-
-    <div class="precio-label">
-      Precio
+    <div class="tarjeta">
+      <div class="etiqueta">Código(s) de barra</div>
+      <div
+        class="barras"
+        id="barras"
+      ></div>
     </div>
 
     <div
-      class="precio-valor"
-      id="precio">
-    </div>
+      class="tiempo"
+      id="tiempoBusqueda"
+    ></div>
 
   </div>
 
-
-  <!-- PRECIO OAI -->
-
-  <div
-    class="oai oculto"
-    id="oaiCard">
-
-    <div class="oai-label">
-      🟢 PRECIO OAI
-    </div>
-
-    <div
-      class="oai-valor"
-      id="precioOAI">
-    </div>
-
-  </div>
-
-
-  <!-- CÓDIGO DE BARRAS -->
-
-  <div class="barras">
-
-    <div class="barras-label">
-      Código de barras
-    </div>
-
-    <div
-      class="barras-valor"
-      id="barras">
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- ===================================================
-     BOTONES
-=================================================== -->
-
-<button
-  id="actualizar"
-  onclick="actualizarBase()">
-
-  🔄 ACTUALIZAR PRODUCTOS
-
-</button>
-
-
-<button
-  id="escanear"
-  onclick="iniciarScanner()">
-
-  📷 ESCANEAR NUEVAMENTE
-
-</button>
-
-
-<div class="footer">
-
-  Base local · Búsqueda instantánea
-
-</div>
-
+  <footer>
+    Lector de Productos · Cruz Verde
+  </footer>
 
 </div>
 
 
 <script>
 
+  /* =========================================================
+     CONFIGURACIÓN
+  ========================================================= */
 
-// =====================================================
-// CONFIGURACIÓN
-// =====================================================
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
+  const DB_NAME = "LectorProductosDB";
+  const DB_VERSION = 1;
+  const STORE_NAME = "productos";
 
-
-const DB_NAME =
-"LectorProductosDB";
-
-const DB_VERSION = 1;
-
-const STORE_NAME =
-"productos";
+  let productos = [];
+  let indice = {};
+  let db = null;
 
 
-let productos = [];
+  /* =========================================================
+     NORMALIZACIÓN DE CÓDIGOS
+     
+     IMPORTANTE:
+     - Mantiene los ceros iniciales.
+     - Elimina espacios.
+     - Elimina guiones.
+     - Convierte a texto.
+  ========================================================= */
 
-let indice = {};
+  function normalizarCodigo(codigo) {
 
-let scanner = null;
-
-let escaneando = false;
-
-
-// =====================================================
-// INDEXEDDB
-// =====================================================
-
-function abrirDB() {
-
-  return new Promise(
-    function(resolve, reject) {
-
-      const request =
-        indexedDB.open(
-          DB_NAME,
-          DB_VERSION
-        );
-
-
-      request.onupgradeneeded =
-        function(event) {
-
-          const db =
-            event.target.result;
-
-
-          if (
-            !db.objectStoreNames.contains(
-              STORE_NAME
-            )
-          ) {
-
-            db.createObjectStore(
-              STORE_NAME,
-              {
-                keyPath: "id"
-              }
-            );
-
-          }
-
-        };
-
-
-      request.onsuccess =
-        function(event) {
-
-          resolve(
-            event.target.result
-          );
-
-        };
-
-
-      request.onerror =
-        function() {
-
-          reject(
-            request.error
-          );
-
-        };
-
+    if (codigo === null || codigo === undefined) {
+      return "";
     }
-  );
 
-}
+    return String(codigo)
+      .trim()
+      .replace(/[\s-]/g, "");
 
-
-// =====================================================
-// GUARDAR BASE
-// =====================================================
-
-async function guardarBaseDB() {
-
-  const db =
-    await abrirDB();
+  }
 
 
-  return new Promise(
-    function(resolve, reject) {
+  /* =========================================================
+     INICIALIZAR INDEXEDDB
+  ========================================================= */
+
+  function abrirDB() {
+
+    return new Promise((resolve, reject) => {
+
+      const request = indexedDB.open(
+        DB_NAME,
+        DB_VERSION
+      );
+
+      request.onupgradeneeded = function(event) {
+
+        const database = event.target.result;
+
+        if (!database.objectStoreNames.contains(STORE_NAME)) {
+
+          database.createObjectStore(
+            STORE_NAME,
+            { keyPath: "id" }
+          );
+
+        }
+
+      };
+
+      request.onsuccess = function(event) {
+
+        db = event.target.result;
+
+        resolve(db);
+
+      };
+
+      request.onerror = function(event) {
+
+        reject(event.target.error);
+
+      };
+
+    });
+
+  }
+
+
+  /* =========================================================
+     GUARDAR PRODUCTOS EN INDEXEDDB
+  ========================================================= */
+
+  function guardarProductos() {
+
+    return new Promise((resolve, reject) => {
 
       const transaction =
         db.transaction(
@@ -679,61 +490,39 @@ async function guardarBaseDB() {
           "readwrite"
         );
 
-
       const store =
-        transaction.objectStore(
-          STORE_NAME
-        );
-
+        transaction.objectStore(STORE_NAME);
 
       store.put({
-
         id: "base",
-
-        productos:
-          productos,
-
-        fecha:
-          new Date().toISOString()
-
+        productos: productos,
+        fecha: new Date().toISOString()
       });
 
+      transaction.oncomplete = function() {
 
-      transaction.oncomplete =
-        function() {
+        resolve();
 
-          resolve();
+      };
 
-        };
+      transaction.onerror = function(event) {
 
+        reject(event.target.error);
 
-      transaction.onerror =
-        function() {
+      };
 
-          reject(
-            transaction.error
-          );
+    });
 
-        };
-
-    }
-  );
-
-}
+  }
 
 
-// =====================================================
-// LEER BASE
-// =====================================================
+  /* =========================================================
+     CARGAR PRODUCTOS DESDE INDEXEDDB
+  ========================================================= */
 
-async function cargarBaseDB() {
+  function cargarProductosGuardados() {
 
-  const db =
-    await abrirDB();
-
-
-  return new Promise(
-    function(resolve, reject) {
+    return new Promise((resolve, reject) => {
 
       const transaction =
         db.transaction(
@@ -741,743 +530,821 @@ async function cargarBaseDB() {
           "readonly"
         );
 
-
       const store =
-        transaction.objectStore(
-          STORE_NAME
-        );
-
+        transaction.objectStore(STORE_NAME);
 
       const request =
         store.get("base");
 
+      request.onsuccess = function() {
 
-      request.onsuccess =
-        function() {
+        if (request.result) {
 
-          resolve(
-            request.result || null
-          );
+          productos =
+            request.result.productos || [];
 
-        };
+          construirIndice();
 
+          mostrarCantidad();
 
-      request.onerror =
-        function() {
-
-          reject(
-            request.error
-          );
-
-        };
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// CREAR ÍNDICE
-// =====================================================
-
-function construirIndice() {
-
-  indice = {};
-
-
-  for (
-    let i = 0;
-    i < productos.length;
-    i++
-  ) {
-
-    const producto =
-      productos[i];
-
-
-    const codigo =
-      String(
-        producto["BARRAS"] || ""
-      ).trim();
-
-
-    if (!codigo) {
-      continue;
-    }
-
-
-    indice[codigo] =
-      producto;
-
-  }
-
-}
-
-
-// =====================================================
-// FECHA
-// =====================================================
-
-function mostrarFecha(fecha) {
-
-  if (!fecha) {
-    return;
-  }
-
-
-  const fechaLocal =
-    new Date(fecha);
-
-
-  document.getElementById(
-    "fecha"
-  ).innerText =
-    "🕐 Última actualización: " +
-    fechaLocal.toLocaleString(
-      "es-CL"
-    );
-
-}
-
-
-// =====================================================
-// CARGAR BASE LOCAL
-// =====================================================
-
-async function cargarBaseLocal() {
-
-  try {
-
-    document.getElementById(
-      "estado"
-    ).innerText =
-      "📱 Cargando base local...";
-
-
-    const datos =
-      await cargarBaseDB();
-
-
-    if (
-      datos &&
-      Array.isArray(
-        datos.productos
-      ) &&
-      datos.productos.length > 0
-    ) {
-
-      productos =
-        datos.productos;
-
-
-      construirIndice();
-
-
-      mostrarFecha(
-        datos.fecha
-      );
-
-
-      document.getElementById(
-        "estado"
-      ).innerText =
-        "🟢 " +
-        productos.length +
-        " productos";
-
-
-      document.getElementById(
-        "mensaje"
-      ).innerText =
-        "📷 Listo para escanear";
-
-
-      iniciarScanner();
-
-
-      return;
-
-    }
-
-
-    descargarBase();
-
-
-  } catch(error) {
-
-    console.error(error);
-
-    descargarBase();
-
-  }
-
-}
-
-
-// =====================================================
-// DESCARGAR
-// =====================================================
-
-function descargarBase() {
-
-  document.getElementById(
-    "estado"
-  ).innerText =
-    "⬇️ Descargando productos...";
-
-
-  const callback =
-    "productos_" +
-    Date.now();
-
-
-  window[callback] =
-    async function(data) {
-
-      try {
-
-        if (
-          !Array.isArray(data)
-        ) {
-
-          throw new Error(
-            "Respuesta incorrecta"
+          mostrarFecha(
+            request.result.fecha
           );
 
         }
 
+        resolve(request.result);
 
-        productos =
-          data;
+      };
 
+      request.onerror = function(event) {
 
-        construirIndice();
+        reject(event.target.error);
 
+      };
 
-        await guardarBaseDB();
+    });
 
-
-        mostrarFecha(
-          new Date()
-        );
-
-
-        document.getElementById(
-          "estado"
-        ).innerText =
-          "🟢 " +
-          productos.length +
-          " productos";
+  }
 
 
-        document.getElementById(
-          "mensaje"
-        ).innerText =
-          "📷 Listo para escanear";
+  /* =========================================================
+     CONSTRUIR ÍNDICE DE CÓDIGOS DE BARRA
+     
+     ESTA ES LA PARTE CORREGIDA.
 
+     Si Google Sheets tiene:
 
-        delete window[callback];
+     000312547428330, 007702031518631
 
+     se crean DOS entradas:
 
-        iniciarScanner();
+     indice["000312547428330"]
+     indice["007702031518631"]
 
-      } catch(error) {
+     Ambas apuntan al mismo producto.
+  ========================================================= */
 
-        console.error(error);
+  function construirIndice() {
 
-        delete window[callback];
+    indice = {};
 
-        usarBaseAnterior();
+    for (let i = 0; i < productos.length; i++) {
+
+      const producto = productos[i];
+
+      const barras =
+        String(producto["BARRAS"] || "");
+
+      if (!barras.trim()) {
+        continue;
+      }
+
+      /*
+        Separamos únicamente dentro de la aplicación.
+
+        NO modificamos Google Sheets.
+
+        Se aceptan:
+        ,
+        ;
+        saltos de línea
+        /
+      */
+
+      const codigos =
+        barras.split(/[,\n;/]+/);
+
+      for (let j = 0; j < codigos.length; j++) {
+
+        const codigo =
+          normalizarCodigo(codigos[j]);
+
+        if (!codigo) {
+          continue;
+        }
+
+        indice[codigo] = producto;
 
       }
 
-    };
+    }
+
+  }
 
 
-  const script =
-    document.createElement(
-      "script"
-    );
+  /* =========================================================
+     MOSTRAR CANTIDAD
+  ========================================================= */
+
+  function mostrarCantidad() {
+
+    document.getElementById(
+      "cantidadProductos"
+    ).textContent = productos.length.toLocaleString("es-CL");
+
+  }
 
 
-  script.src =
-    API_URL +
-    "?accion=productos&callback=" +
-    callback;
+  /* =========================================================
+     MOSTRAR FECHA
+  ========================================================= */
 
+  function mostrarFecha(fecha) {
 
-  script.onerror =
-    function() {
-
-      delete window[callback];
-
-      usarBaseAnterior();
-
-    };
-
-
-  document.body.appendChild(
-    script
-  );
-
-}
-
-
-// =====================================================
-// USAR BASE ANTERIOR
-// =====================================================
-
-async function usarBaseAnterior() {
-
-  try {
-
-    const datos =
-      await cargarBaseDB();
-
-
-    if (
-      !datos ||
-      !datos.productos
-    ) {
+    if (!fecha) {
 
       document.getElementById(
-        "estado"
-      ).innerText =
-        "❌ No hay productos disponibles";
-
-
-      document.getElementById(
-        "mensaje"
-      ).innerText =
-        "Necesitas Internet para descargar la base.";
-
+        "ultimaActualizacion"
+      ).textContent = "Sin datos";
 
       return;
 
     }
 
+    try {
 
-    productos =
-      datos.productos;
-
-
-    construirIndice();
-
-
-    mostrarFecha(
-      datos.fecha
-    );
-
-
-    document.getElementById(
-      "estado"
-    ).innerText =
-      "🟢 Usando copia local";
-
-
-    document.getElementById(
-      "mensaje"
-    ).innerText =
-      "📷 Listo para escanear";
-
-
-    iniciarScanner();
-
-  } catch(error) {
-
-    console.error(error);
-
-  }
-
-}
-
-
-// =====================================================
-// ACTUALIZAR
-// =====================================================
-
-function actualizarBase() {
-
-  const confirmar =
-    confirm(
-      "¿Actualizar los productos desde Google Sheets?"
-    );
-
-
-  if (!confirmar) {
-    return;
-  }
-
-
-  detenerScanner();
-
-
-  descargarBase();
-
-}
-
-
-// =====================================================
-// ESCÁNER
-// =====================================================
-
-function iniciarScanner() {
-
-  if (escaneando) {
-    return;
-  }
-
-
-  if (
-    productos.length === 0
-  ) {
-
-    return;
-
-  }
-
-
-  escaneando = true;
-
-
-  scanner =
-    new Html5Qrcode(
-      "reader"
-    );
-
-
-  scanner.start(
-
-    {
-      facingMode:
-        "environment"
-    },
-
-    {
-      fps: 10,
-
-      qrbox: {
-        width: 300,
-        height: 150
-      }
-
-    },
-
-    function(codigoDetectado) {
-
-      detenerScanner();
-
-
-      buscarProductoLocal(
-        codigoDetectado
-      );
-
-    },
-
-    function(error) {
-
-      // Ignorar errores normales.
-
-    }
-
-  )
-
-
-  .catch(
-    function(error) {
-
-      console.error(error);
-
-      escaneando = false;
-
+      const fechaObj =
+        new Date(fecha);
 
       document.getElementById(
-        "mensaje"
-      ).innerText =
-        "❌ No se pudo acceder a la cámara.";
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// DETENER ESCÁNER
-// =====================================================
-
-function detenerScanner() {
-
-  if (!scanner) {
-
-    escaneando = false;
-
-    return;
-
-  }
-
-
-  scanner.stop()
-
-    .then(
-      function() {
-
-        scanner.clear();
-
-        scanner = null;
-
-        escaneando = false;
-
-      }
-    )
-
-    .catch(
-      function(error) {
-
-        console.error(error);
-
-        scanner = null;
-
-        escaneando = false;
-
-      }
-    );
-
-}
-
-
-// =====================================================
-// BÚSQUEDA LOCAL
-// =====================================================
-
-function buscarProductoLocal(
-  codigo
-) {
-
-  const inicio =
-    performance.now();
-
-
-  const producto =
-    indice[
-      String(codigo).trim()
-    ];
-
-
-  const tiempo =
-    Math.round(
-      performance.now() -
-      inicio
-    );
-
-
-  if (!producto) {
-
-    document.getElementById(
-      "mensaje"
-    ).innerText =
-      "❌ Producto no encontrado.";
-
-
-    limpiarResultado();
-
-
-    return;
-
-  }
-
-
-  mostrarProducto(
-    producto,
-    tiempo
-  );
-
-}
-
-
-// =====================================================
-// MOSTRAR PRODUCTO
-// =====================================================
-
-function mostrarProducto(
-  producto,
-  tiempo
-) {
-
-  document.getElementById(
-    "mensaje"
-  ).innerText =
-    "✅ Encontrado en " +
-    tiempo +
-    " ms";
-
-
-  document.getElementById(
-    "codigoInterno"
-  ).innerText =
-    producto[
-      "CODIGO INTERNO"
-    ] || "-";
-
-
-  document.getElementById(
-    "descriptor"
-  ).innerText =
-    producto[
-      "DESCRIPTOR"
-    ] || "-";
-
-
-  document.getElementById(
-    "precio"
-  ).innerText =
-    producto[
-      "PRECIO"
-    ] || "-";
-
-
-  document.getElementById(
-    "barras"
-  ).innerText =
-    producto[
-      "BARRAS"
-    ] || "-";
-
-
-  const oaiCard =
-    document.getElementById(
-      "oaiCard"
-    );
-
-
-  const precioOAI =
-    String(
-      producto["PRECIOOAI"] || ""
-    ).trim();
-
-
-  if (
-    precioOAI !== ""
-  ) {
-
-    document.getElementById(
-      "precioOAI"
-    ).innerText =
-      precioOAI;
-
-
-    oaiCard.classList.remove(
-      "oculto"
-    );
-
-  } else {
-
-    document.getElementById(
-      "precioOAI"
-    ).innerText =
-      "";
-
-
-    oaiCard.classList.add(
-      "oculto"
-    );
-
-  }
-
-}
-
-
-// =====================================================
-// LIMPIAR RESULTADO
-// =====================================================
-
-function limpiarResultado() {
-
-  document.getElementById(
-    "codigoInterno"
-  ).innerText = "";
-
-
-  document.getElementById(
-    "descriptor"
-  ).innerText = "";
-
-
-  document.getElementById(
-    "precio"
-  ).innerText = "";
-
-
-  document.getElementById(
-    "precioOAI"
-  ).innerText = "";
-
-
-  document.getElementById(
-    "barras"
-  ).innerText = "";
-
-
-  document.getElementById(
-    "oaiCard"
-  ).classList.add(
-    "oculto"
-  );
-
-}
-
-
-// =====================================================
-// SERVICE WORKER
-// =====================================================
-
-if (
-  "serviceWorker" in navigator
-) {
-
-  window.addEventListener(
-    "load",
-    function() {
-
-      navigator.serviceWorker
-        .register("./sw.js")
-        .then(
-          function() {
-
-            console.log(
-              "Service Worker registrado"
-            );
-
-          }
-        )
-        .catch(
-          function(error) {
-
-            console.error(
-              "Error registrando Service Worker:",
-              error
-            );
-
+        "ultimaActualizacion"
+      ).textContent =
+        fechaObj.toLocaleString(
+          "es-CL",
+          {
+            dateStyle: "short",
+            timeStyle: "short"
           }
         );
 
+    } catch (error) {
+
+      document.getElementById(
+        "ultimaActualizacion"
+      ).textContent = "Disponible";
+
     }
-  );
 
-}
+  }
 
 
-// =====================================================
-// INICIO
-// =====================================================
+  /* =========================================================
+     BUSCAR PRODUCTO LOCALMENTE
+  ========================================================= */
 
-cargarBaseLocal();
+  function buscarProductoLocal(codigo) {
 
+    const inicio =
+      performance.now();
+
+    const codigoNormalizado =
+      normalizarCodigo(codigo);
+
+    const producto =
+      indice[codigoNormalizado];
+
+    const tiempo =
+      Math.round(
+        performance.now() - inicio
+      );
+
+    if (!producto) {
+
+      document.getElementById(
+        "resultado"
+      ).style.display = "none";
+
+      const mensaje =
+        document.getElementById("mensaje");
+
+      mensaje.className =
+        "mensaje error";
+
+      mensaje.textContent =
+        "❌ Producto no encontrado.";
+
+      return;
+
+    }
+
+    mostrarProducto(
+      producto,
+      tiempo
+    );
+
+  }
+
+
+  /* =========================================================
+     MOSTRAR PRODUCTO
+  ========================================================= */
+
+  function mostrarProducto(
+    producto,
+    tiempo
+  ) {
+
+    document.getElementById(
+      "mensaje"
+    ).textContent = "";
+
+    document.getElementById(
+      "mensaje"
+    ).className = "mensaje";
+
+    document.getElementById(
+      "resultado"
+    ).style.display = "block";
+
+
+    /* Código interno */
+
+    document.getElementById(
+      "codigoInterno"
+    ).textContent =
+      producto["CODIGO INTERNO"] || "";
+
+
+    /* Descriptor */
+
+    document.getElementById(
+      "descriptor"
+    ).textContent =
+      producto["DESCRIPTOR"] || "";
+
+
+    /* Precio */
+
+    document.getElementById(
+      "precio"
+    ).textContent =
+      formatearPrecio(
+        producto["PRECIO"]
+      );
+
+
+    /* Precio OAI */
+
+    const precioOAI =
+      producto["PRECIOOAI"];
+
+    const oaiCard =
+      document.getElementById(
+        "oaiCard"
+      );
+
+    const oaiValor =
+      document.getElementById(
+        "precioOAI"
+      );
+
+
+    if (
+      precioOAI !== undefined &&
+      precioOAI !== null &&
+      String(precioOAI).trim() !== ""
+    ) {
+
+      oaiValor.textContent =
+        formatearPrecio(precioOAI);
+
+      oaiCard.classList.remove(
+        "oculto"
+      );
+
+    } else {
+
+      oaiValor.textContent = "";
+
+      oaiCard.classList.add(
+        "oculto"
+      );
+
+    }
+
+
+    /* Barras */
+
+    document.getElementById(
+      "barras"
+    ).textContent =
+      producto["BARRAS"] || "";
+
+
+    /* Tiempo */
+
+    document.getElementById(
+      "tiempoBusqueda"
+    ).textContent =
+      "Búsqueda local: " +
+      tiempo +
+      " ms";
+
+  }
+
+
+  /* =========================================================
+     FORMATEAR PRECIO
+  ========================================================= */
+
+  function formatearPrecio(valor) {
+
+    if (
+      valor === null ||
+      valor === undefined ||
+      String(valor).trim() === ""
+    ) {
+
+      return "Sin precio";
+
+    }
+
+    const texto =
+      String(valor).trim();
+
+    /*
+      Si contiene formatos como:
+      2X11490
+      2x5990
+
+      los dejamos tal cual.
+    */
+
+    if (
+      /x/i.test(texto)
+    ) {
+
+      return texto;
+
+    }
+
+    /*
+      Si ya viene con $,
+      intentamos mostrarlo correctamente.
+    */
+
+    if (
+      texto.includes("$")
+    ) {
+
+      return texto;
+
+    }
+
+    /*
+      Convertir números normales
+      a formato chileno.
+    */
+
+    const numero =
+      Number(
+        texto.replace(
+          /[^\d.,-]/g,
+          ""
+        ).replace(
+          /\./g,
+          ""
+        ).replace(
+          ",",
+          "."
+        )
+      );
+
+    if (
+      !isNaN(numero)
+    ) {
+
+      return "$ " +
+        Math.round(numero)
+          .toLocaleString("es-CL");
+
+    }
+
+    return texto;
+
+  }
+
+
+  /* =========================================================
+     ACTUALIZAR PRODUCTOS DESDE GOOGLE SHEETS
+  ========================================================= */
+
+  function actualizarProductos() {
+
+    const mensaje =
+      document.getElementById(
+        "mensaje"
+      );
+
+    mensaje.className =
+      "mensaje cargando";
+
+    mensaje.textContent =
+      "⏳ Actualizando productos...";
+
+    const callbackName =
+      "callbackProductos_" +
+      Date.now();
+
+
+    window[callbackName] =
+      function(data) {
+
+        try {
+
+          if (
+            !data ||
+            !Array.isArray(data.productos)
+          ) {
+
+            throw new Error(
+              "Respuesta inválida"
+            );
+
+          }
+
+          productos =
+            data.productos;
+
+          construirIndice();
+
+          mostrarCantidad();
+
+          guardarProductos()
+            .then(function() {
+
+              mostrarFecha(
+                new Date().toISOString()
+              );
+
+              mensaje.className =
+                "mensaje";
+
+              mensaje.textContent =
+                "✅ Productos actualizados correctamente.";
+
+            })
+            .catch(function(error) {
+
+              console.error(error);
+
+              mensaje.className =
+                "mensaje error";
+
+              mensaje.textContent =
+                "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
+
+            });
+
+        } catch (error) {
+
+          console.error(error);
+
+          mensaje.className =
+            "mensaje error";
+
+          mensaje.textContent =
+            "❌ Error procesando los productos.";
+
+        }
+
+        const script =
+          document.getElementById(
+            callbackName
+          );
+
+        if (script) {
+          script.remove();
+        }
+
+        delete window[callbackName];
+
+      };
+
+
+    const script =
+      document.createElement("script");
+
+    script.id =
+      callbackName;
+
+    script.src =
+      API_URL +
+      "?accion=productos&callback=" +
+      callbackName +
+      "&t=" +
+      Date.now();
+
+    script.onerror =
+      function() {
+
+        mensaje.className =
+          "mensaje error";
+
+        mensaje.textContent =
+          "❌ No se pudo conectar con Google Sheets.";
+
+        script.remove();
+
+        delete window[callbackName];
+
+      };
+
+
+    document.body.appendChild(script);
+
+  }
+
+
+  /* =========================================================
+     INPUT DE BÚSQUEDA
+  ========================================================= */
+
+  document
+    .getElementById("codigoInput")
+    .addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          event.key === "Enter"
+        ) {
+
+          event.preventDefault();
+
+          buscarProductoLocal(
+            this.value
+          );
+
+          this.select();
+
+        }
+
+      }
+    );
+
+
+  /*
+    También buscamos automáticamente
+    cuando el lector pega/escribe un código.
+  */
+
+  let ultimoValor = "";
+
+  document
+    .getElementById("codigoInput")
+    .addEventListener(
+      "input",
+      function() {
+
+        const valor =
+          this.value;
+
+        /*
+          Evitamos búsquedas repetidas.
+        */
+
+        if (
+          valor === ultimoValor
+        ) {
+          return;
+        }
+
+        ultimoValor = valor;
+
+        /*
+          Los códigos de barra normalmente
+          tienen entre 8 y 14 dígitos.
+
+          No buscamos demasiado pronto
+          mientras todavía se está escaneando.
+        */
+
+        const codigo =
+          normalizarCodigo(valor);
+
+        if (
+          codigo.length >= 8 &&
+          codigo.length <= 14
+        ) {
+
+          if (
+            indice[codigo]
+          ) {
+
+            buscarProductoLocal(
+              codigo
+            );
+
+            this.select();
+
+          }
+
+        }
+
+      }
+    );
+
+
+  /* =========================================================
+     ESCÁNER
+     
+     En PC no hay cámara.
+     En teléfonos se puede utilizar el lector
+     integrado del navegador si está disponible.
+  ========================================================= */
+
+  async function iniciarEscaner() {
+
+    /*
+      Intentamos utilizar BarcodeDetector
+      cuando el navegador lo soporta.
+    */
+
+    if (
+      "BarcodeDetector" in window
+    ) {
+
+      try {
+
+        const formatos =
+          await BarcodeDetector
+            .getSupportedFormats();
+
+        const detector =
+          new BarcodeDetector({
+            formats: formatos
+          });
+
+        const stream =
+          await navigator.mediaDevices
+            .getUserMedia({
+              video: {
+                facingMode: {
+                  ideal: "environment"
+                }
+              }
+            });
+
+        const video =
+          document.createElement("video");
+
+        video.style.position =
+          "fixed";
+
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.style.zIndex = "9999";
+
+        video.autoplay = true;
+        video.playsInline = true;
+
+        document.body.appendChild(
+          video
+        );
+
+        video.srcObject =
+          stream;
+
+        const detener =
+          function() {
+
+            stream
+              .getTracks()
+              .forEach(
+                track =>
+                  track.stop()
+              );
+
+            video.remove();
+
+          };
+
+
+        const buscar =
+          async function() {
+
+            try {
+
+              const detecciones =
+                await detector.detect(
+                  video
+                );
+
+              if (
+                detecciones.length > 0
+              ) {
+
+                const codigo =
+                  detecciones[0].rawValue;
+
+                detener();
+
+                document
+                  .getElementById(
+                    "codigoInput"
+                  )
+                  .value = codigo;
+
+                buscarProductoLocal(
+                  codigo
+                );
+
+                return;
+
+              }
+
+            } catch (error) {
+
+              console.error(error);
+
+            }
+
+            requestAnimationFrame(
+              buscar
+            );
+
+          };
+
+        buscar();
+
+        return;
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    }
+
+
+    alert(
+      "El escáner de cámara no está disponible en este navegador. Puedes usar un lector de códigos de barras que escriba directamente en el campo de búsqueda."
+    );
+
+  }
+
+
+  /* =========================================================
+     INICIO
+  ========================================================= */
+
+  async function iniciar() {
+
+    try {
+
+      await abrirDB();
+
+      const datos =
+        await cargarProductosGuardados();
+
+      if (
+        datos &&
+        productos.length > 0
+      ) {
+
+        document.getElementById(
+          "mensaje"
+        ).textContent =
+          "✅ Productos disponibles. Puedes escanear.";
+
+      } else {
+
+        document.getElementById(
+          "mensaje"
+        ).textContent =
+          "📥 Presiona ACTUALIZAR PRODUCTOS para cargar la base.";
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+      document.getElementById(
+        "mensaje"
+      ).className =
+        "mensaje error";
+
+      document.getElementById(
+        "mensaje"
+      ).textContent =
+        "⚠️ No se pudo acceder a la base local.";
+
+    }
+
+  }
+
+
+  iniciar();
 
 </script>
 
 </body>
-
 </html>
 ```
