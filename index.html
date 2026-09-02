@@ -398,13 +398,7 @@
     "https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
   const DB_NAME = "LectorProductosDB";
-
-  /*
-    Subimos la versión para asegurarnos de que el navegador
-    ejecute esta versión nueva.
-  */
-  const DB_VERSION = 2;
-
+  const DB_VERSION = 3;
   const STORE_NAME = "productos";
 
   let productos = [];
@@ -413,15 +407,18 @@
 
 
   /* =========================================================
-     NORMALIZAR CÓDIGO
+     NORMALIZACIÓN DE CÓDIGOS
+     
+     IMPORTANTE:
+     - Mantiene los ceros iniciales.
+     - Elimina espacios.
+     - Elimina guiones.
+     - Convierte a texto.
   ========================================================= */
 
   function normalizarCodigo(codigo) {
 
-    if (
-      codigo === null ||
-      codigo === undefined
-    ) {
+    if (codigo === null || codigo === undefined) {
       return "";
     }
 
@@ -433,56 +430,46 @@
 
 
   /* =========================================================
-     INDEXEDDB
+     INICIALIZAR INDEXEDDB
   ========================================================= */
 
   function abrirDB() {
 
     return new Promise((resolve, reject) => {
 
-      const request =
-        indexedDB.open(
-          DB_NAME,
-          DB_VERSION
-        );
+      const request = indexedDB.open(
+        DB_NAME,
+        DB_VERSION
+      );
 
-      request.onupgradeneeded =
-        function(event) {
+      request.onupgradeneeded = function(event) {
 
-          const database =
-            event.target.result;
+        const database = event.target.result;
 
-          if (
-            !database.objectStoreNames
-              .contains(STORE_NAME)
-          ) {
+        if (!database.objectStoreNames.contains(STORE_NAME)) {
 
-            database.createObjectStore(
-              STORE_NAME,
-              { keyPath: "id" }
-            );
-
-          }
-
-        };
-
-      request.onsuccess =
-        function(event) {
-
-          db = event.target.result;
-
-          resolve(db);
-
-        };
-
-      request.onerror =
-        function(event) {
-
-          reject(
-            event.target.error
+          database.createObjectStore(
+            STORE_NAME,
+            { keyPath: "id" }
           );
 
-        };
+        }
+
+      };
+
+      request.onsuccess = function(event) {
+
+        db = event.target.result;
+
+        resolve(db);
+
+      };
+
+      request.onerror = function(event) {
+
+        reject(event.target.error);
+
+      };
 
     });
 
@@ -490,184 +477,166 @@
 
 
   /* =========================================================
-     GUARDAR PRODUCTOS
+     GUARDAR PRODUCTOS EN INDEXEDDB
   ========================================================= */
 
   function guardarProductos() {
 
-    return new Promise(
-      (resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
-        const transaction =
-          db.transaction(
-            STORE_NAME,
-            "readwrite"
-          );
+      const transaction =
+        db.transaction(
+          STORE_NAME,
+          "readwrite"
+        );
 
-        const store =
-          transaction.objectStore(
-            STORE_NAME
-          );
+      const store =
+        transaction.objectStore(STORE_NAME);
 
-        store.put({
+      store.put({
+        id: "base",
+        productos: productos,
+        fecha: new Date().toISOString()
+      });
 
-          id: "base",
+      transaction.oncomplete = function() {
 
-          productos:
-            productos,
+        resolve();
 
-          fecha:
-            new Date().toISOString()
+      };
 
-        });
+      transaction.onerror = function(event) {
 
-        transaction.oncomplete =
-          function() {
+        reject(event.target.error);
 
-            resolve();
+      };
 
-          };
-
-        transaction.onerror =
-          function(event) {
-
-            reject(
-              event.target.error
-            );
-
-          };
-
-      }
-    );
+    });
 
   }
 
 
   /* =========================================================
-     CARGAR PRODUCTOS
+     CARGAR PRODUCTOS DESDE INDEXEDDB
   ========================================================= */
 
   function cargarProductosGuardados() {
 
-    return new Promise(
-      (resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
-        const transaction =
-          db.transaction(
-            STORE_NAME,
-            "readonly"
+      const transaction =
+        db.transaction(
+          STORE_NAME,
+          "readonly"
+        );
+
+      const store =
+        transaction.objectStore(STORE_NAME);
+
+      const request =
+        store.get("base");
+
+      request.onsuccess = function() {
+
+        if (request.result) {
+
+          productos =
+            request.result.productos || [];
+
+          construirIndice();
+
+          mostrarCantidad();
+
+          mostrarFecha(
+            request.result.fecha
           );
 
-        const store =
-          transaction.objectStore(
-            STORE_NAME
-          );
+        }
 
-        const request =
-          store.get("base");
+        resolve(request.result);
 
-        request.onsuccess =
-          function() {
+      };
 
-            if (request.result) {
+      request.onerror = function(event) {
 
-              productos =
-                request.result.productos || [];
+        reject(event.target.error);
 
-              construirIndice();
+      };
 
-              mostrarCantidad();
-
-              mostrarFecha(
-                request.result.fecha
-              );
-
-            }
-
-            resolve(
-              request.result
-            );
-
-          };
-
-        request.onerror =
-          function(event) {
-
-            reject(
-              event.target.error
-            );
-
-          };
-
-      }
-    );
+    });
 
   }
 
 
   /* =========================================================
-     CONSTRUIR ÍNDICE
+     CONSTRUIR ÍNDICE DE CÓDIGOS DE BARRA
      
-     EJEMPLO:
+     ESTA ES LA PARTE CORREGIDA.
+
+     Si Google Sheets tiene:
 
      000312547428330, 007702031518631
 
-     genera:
+     se crean DOS entradas:
 
-     000312547428330 → producto
-     007702031518631 → producto
+     indice["000312547428330"]
+     indice["007702031518631"]
+
+     Ambas apuntan al mismo producto.
   ========================================================= */
 
   function construirIndice() {
 
     indice = {};
 
-    for (
-      let i = 0;
-      i < productos.length;
-      i++
-    ) {
+    for (let i = 0; i < productos.length; i++) {
 
-      const producto =
-        productos[i];
+      const producto = productos[i];
 
       const barras =
-        String(
-          producto["BARRAS"] || ""
-        );
+        String(producto["BARRAS"] || "");
 
-      if (
-        !barras.trim()
-      ) {
+      if (!barras.trim()) {
         continue;
       }
 
       /*
-        La hoja puede mantener los códigos juntos.
+        Separamos únicamente dentro de la aplicación.
 
-        Aquí los separamos SOLO en memoria.
+        NO modificamos Google Sheets.
+
+        Se aceptan:
+        ,
+        ;
+        saltos de línea
+        /
       */
 
       const codigos =
         barras.split(/[,\n;/]+/);
 
-      for (
-        let j = 0;
-        j < codigos.length;
-        j++
-      ) {
+      for (let j = 0; j < codigos.length; j++) {
 
         const codigo =
-          normalizarCodigo(
-            codigos[j]
-          );
+          normalizarCodigo(codigos[j]);
 
         if (!codigo) {
           continue;
         }
 
-        indice[codigo] =
-          producto;
+        // Guardamos el código exactamente como viene.
+        indice[codigo] = producto;
+
+        // Algunos códigos vienen con 3 ceros extra a la izquierda
+        // (ej.: 000074312017995 -> 074312017995).
+        // Creamos también esa variante para poder encontrar el producto
+        // sin modificar los datos originales de Google Sheets.
+        if (codigo.length === 15 && codigo.startsWith("000")) {
+          const codigoSinTresCeros = codigo.slice(3);
+          if (codigoSinTresCeros.length >= 8) {
+            indice[codigoSinTresCeros] = producto;
+          }
+        }
 
       }
 
@@ -677,22 +646,20 @@
 
 
   /* =========================================================
-     CANTIDAD
+     MOSTRAR CANTIDAD
   ========================================================= */
 
   function mostrarCantidad() {
 
     document.getElementById(
       "cantidadProductos"
-    ).textContent =
-      productos.length
-        .toLocaleString("es-CL");
+    ).textContent = productos.length.toLocaleString("es-CL");
 
   }
 
 
   /* =========================================================
-     FECHA
+     MOSTRAR FECHA
   ========================================================= */
 
   function mostrarFecha(fecha) {
@@ -701,8 +668,7 @@
 
       document.getElementById(
         "ultimaActualizacion"
-      ).textContent =
-        "Sin datos";
+      ).textContent = "Sin datos";
 
       return;
 
@@ -728,8 +694,7 @@
 
       document.getElementById(
         "ultimaActualizacion"
-      ).textContent =
-        "Disponible";
+      ).textContent = "Disponible";
 
     }
 
@@ -737,7 +702,7 @@
 
 
   /* =========================================================
-     BUSCAR PRODUCTO
+     BUSCAR PRODUCTO LOCALMENTE
   ========================================================= */
 
   function buscarProductoLocal(codigo) {
@@ -748,8 +713,16 @@
     const codigoNormalizado =
       normalizarCodigo(codigo);
 
-    const producto =
+    let producto =
       indice[codigoNormalizado];
+
+    // Si no existe coincidencia exacta, probamos la variante
+    // de 15 dígitos con 3 ceros extra al comienzo.
+    if (!producto && codigoNormalizado.length === 12) {
+      const codigoConTresCeros =
+        "000" + codigoNormalizado;
+      producto = indice[codigoConTresCeros];
+    }
 
     const tiempo =
       Math.round(
@@ -760,13 +733,10 @@
 
       document.getElementById(
         "resultado"
-      ).style.display =
-        "none";
+      ).style.display = "none";
 
       const mensaje =
-        document.getElementById(
-          "mensaje"
-        );
+        document.getElementById("mensaje");
 
       mensaje.className =
         "mensaje error";
@@ -797,19 +767,18 @@
 
     document.getElementById(
       "mensaje"
-    ).textContent =
-      "";
+    ).textContent = "";
 
     document.getElementById(
       "mensaje"
-    ).className =
-      "mensaje";
+    ).className = "mensaje";
 
     document.getElementById(
       "resultado"
-    ).style.display =
-      "block";
+    ).style.display = "block";
 
+
+    /* Código interno */
 
     document.getElementById(
       "codigoInterno"
@@ -817,11 +786,15 @@
       producto["CODIGO INTERNO"] || "";
 
 
+    /* Descriptor */
+
     document.getElementById(
       "descriptor"
     ).textContent =
       producto["DESCRIPTOR"] || "";
 
+
+    /* Precio */
 
     document.getElementById(
       "precio"
@@ -830,6 +803,8 @@
         producto["PRECIO"]
       );
 
+
+    /* Precio OAI */
 
     const precioOAI =
       producto["PRECIOOAI"];
@@ -852,9 +827,7 @@
     ) {
 
       oaiValor.textContent =
-        formatearPrecio(
-          precioOAI
-        );
+        formatearPrecio(precioOAI);
 
       oaiCard.classList.remove(
         "oculto"
@@ -862,8 +835,7 @@
 
     } else {
 
-      oaiValor.textContent =
-        "";
+      oaiValor.textContent = "";
 
       oaiCard.classList.add(
         "oculto"
@@ -872,11 +844,15 @@
     }
 
 
+    /* Barras */
+
     document.getElementById(
       "barras"
     ).textContent =
       producto["BARRAS"] || "";
 
+
+    /* Tiempo */
 
     document.getElementById(
       "tiempoBusqueda"
@@ -907,6 +883,13 @@
     const texto =
       String(valor).trim();
 
+    /*
+      Si contiene formatos como:
+      2X11490
+      2x5990
+
+      los dejamos tal cual.
+    */
 
     if (
       /x/i.test(texto)
@@ -916,6 +899,10 @@
 
     }
 
+    /*
+      Si ya viene con $,
+      intentamos mostrarlo correctamente.
+    */
 
     if (
       texto.includes("$")
@@ -925,24 +912,24 @@
 
     }
 
+    /*
+      Convertir números normales
+      a formato chileno.
+    */
 
     const numero =
       Number(
-        texto
-          .replace(
-            /[^\d.,-]/g,
-            ""
-          )
-          .replace(
-            /\./g,
-            ""
-          )
-          .replace(
-            ",",
-            "."
-          )
+        texto.replace(
+          /[^\d.,-]/g,
+          ""
+        ).replace(
+          /\./g,
+          ""
+        ).replace(
+          ",",
+          "."
+        )
       );
-
 
     if (
       !isNaN(numero)
@@ -960,7 +947,7 @@
 
 
   /* =========================================================
-     ACTUALIZAR PRODUCTOS
+     ACTUALIZAR PRODUCTOS DESDE GOOGLE SHEETS
   ========================================================= */
 
   function actualizarProductos() {
@@ -976,7 +963,6 @@
     mensaje.textContent =
       "⏳ Actualizando productos...";
 
-
     const callbackName =
       "callbackProductos_" +
       Date.now();
@@ -989,9 +975,7 @@
 
           if (
             !data ||
-            !Array.isArray(
-              data.productos
-            )
+            !Array.isArray(data.productos)
           ) {
 
             throw new Error(
@@ -1000,53 +984,38 @@
 
           }
 
-
           productos =
             data.productos;
-
-
-          /*
-            IMPORTANTE:
-
-            Reconstruimos el índice inmediatamente
-            después de recibir los datos nuevos.
-          */
 
           construirIndice();
 
           mostrarCantidad();
 
-
           guardarProductos()
-            .then(
-              function() {
+            .then(function() {
 
-                mostrarFecha(
-                  new Date().toISOString()
-                );
+              mostrarFecha(
+                new Date().toISOString()
+              );
 
-                mensaje.className =
-                  "mensaje";
+              mensaje.className =
+                "mensaje";
 
-                mensaje.textContent =
-                  "✅ Productos actualizados correctamente.";
+              mensaje.textContent =
+                "✅ Productos actualizados correctamente.";
 
-              }
-            )
-            .catch(
-              function(error) {
+            })
+            .catch(function(error) {
 
-                console.error(error);
+              console.error(error);
 
-                mensaje.className =
-                  "mensaje error";
+              mensaje.className =
+                "mensaje error";
 
-                mensaje.textContent =
-                  "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
+              mensaje.textContent =
+                "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
 
-              }
-            );
-
+            });
 
         } catch (error) {
 
@@ -1060,7 +1029,6 @@
 
         }
 
-
         const script =
           document.getElementById(
             callbackName
@@ -1070,30 +1038,23 @@
           script.remove();
         }
 
-        delete window[
-          callbackName
-        ];
+        delete window[callbackName];
 
       };
 
 
     const script =
-      document.createElement(
-        "script"
-      );
+      document.createElement("script");
 
     script.id =
       callbackName;
 
-
     script.src =
       API_URL +
-      "?accion=productos" +
-      "&callback=" +
+      "?accion=productos&callback=" +
       callbackName +
       "&t=" +
       Date.now();
-
 
     script.onerror =
       function() {
@@ -1106,16 +1067,12 @@
 
         script.remove();
 
-        delete window[
-          callbackName
-        ];
+        delete window[callbackName];
 
       };
 
 
-    document.body.appendChild(
-      script
-    );
+    document.body.appendChild(script);
 
   }
 
@@ -1124,111 +1081,20 @@
      INPUT DE BÚSQUEDA
   ========================================================= */
 
-  const codigoInput =
-    document.getElementById(
-      "codigoInput"
-    );
-
-
-  /*
-    ENTER:
-
-    Permite buscar manualmente cualquier código,
-    independientemente de su longitud.
-  */
-
-  codigoInput.addEventListener(
-    "keydown",
-    function(event) {
-
-      if (
-        event.key === "Enter"
-      ) {
-
-        event.preventDefault();
-
-        buscarProductoLocal(
-          this.value
-        );
-
-        this.select();
-
-      }
-
-    }
-  );
-
-
-  /*
-    BÚSQUEDA AUTOMÁTICA
-
-    AQUÍ ESTABA EL ERROR.
-
-    Antes decía:
-
-    codigo.length <= 14
-
-    Ahora NO existe límite superior.
-
-    Por lo tanto funciona con:
-    8 dígitos
-    12 dígitos
-    13 dígitos
-    14 dígitos
-    15 dígitos
-    16 dígitos
-    etc.
-  */
-
-  let ultimoValor = "";
-
-  codigoInput.addEventListener(
-    "input",
-    function() {
-
-      const valor =
-        this.value;
-
-
-      if (
-        valor === ultimoValor
-      ) {
-        return;
-      }
-
-      ultimoValor =
-        valor;
-
-
-      const codigo =
-        normalizarCodigo(
-          valor
-        );
-
-
-      /*
-        Solo intentamos búsqueda automática
-        cuando ya tenemos al menos 8 caracteres.
-
-        NO ponemos límite máximo.
-      */
-
-      if (
-        codigo.length >= 8
-      ) {
-
-        /*
-          Solo mostramos el producto
-          si el código realmente existe
-          en el índice.
-        */
+  document
+    .getElementById("codigoInput")
+    .addEventListener(
+      "keydown",
+      function(event) {
 
         if (
-          indice[codigo]
+          event.key === "Enter"
         ) {
 
+          event.preventDefault();
+
           buscarProductoLocal(
-            codigo
+            this.value
           );
 
           this.select();
@@ -1236,16 +1102,84 @@
         }
 
       }
+    );
 
-    }
-  );
+
+  /*
+    También buscamos automáticamente
+    cuando el lector pega/escribe un código.
+  */
+
+  let ultimoValor = "";
+
+  document
+    .getElementById("codigoInput")
+    .addEventListener(
+      "input",
+      function() {
+
+        const valor =
+          this.value;
+
+        /*
+          Evitamos búsquedas repetidas.
+        */
+
+        if (
+          valor === ultimoValor
+        ) {
+          return;
+        }
+
+        ultimoValor = valor;
+
+        /*
+          Los códigos de barra normalmente
+          tienen 8 o más dígitos.
+
+          No buscamos demasiado pronto
+          mientras todavía se está escaneando.
+        */
+
+        const codigo =
+          normalizarCodigo(valor);
+
+        if (
+          codigo.length >= 8
+        ) {
+
+          if (
+            indice[codigo]
+          ) {
+
+            buscarProductoLocal(
+              codigo
+            );
+
+            this.select();
+
+          }
+
+        }
+
+      }
+    );
 
 
   /* =========================================================
      ESCÁNER
+     
+     En PC no hay cámara.
+     En teléfonos se puede utilizar el lector
+     integrado del navegador si está disponible.
   ========================================================= */
 
   async function iniciarEscaner() {
+
+    /*
+      Intentamos utilizar BarcodeDetector
+      cuando el navegador lo soporta.
+    */
 
     if (
       "BarcodeDetector" in window
@@ -1257,13 +1191,10 @@
           await BarcodeDetector
             .getSupportedFormats();
 
-
         const detector =
           new BarcodeDetector({
-            formats:
-              formatos
+            formats: formatos
           });
-
 
         const stream =
           await navigator.mediaDevices
@@ -1275,49 +1206,28 @@
               }
             });
 
-
         const video =
-          document.createElement(
-            "video"
-          );
-
+          document.createElement("video");
 
         video.style.position =
           "fixed";
 
-        video.style.top =
-          "0";
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.style.zIndex = "9999";
 
-        video.style.left =
-          "0";
-
-        video.style.width =
-          "100%";
-
-        video.style.height =
-          "100%";
-
-        video.style.objectFit =
-          "cover";
-
-        video.style.zIndex =
-          "9999";
-
-        video.autoplay =
-          true;
-
-        video.playsInline =
-          true;
-
+        video.autoplay = true;
+        video.playsInline = true;
 
         document.body.appendChild(
           video
         );
 
-
         video.srcObject =
           stream;
-
 
         const detener =
           function() {
@@ -1344,27 +1254,24 @@
                   video
                 );
 
-
               if (
                 detecciones.length > 0
               ) {
 
                 const codigo =
-                  detecciones[0]
-                    .rawValue;
-
+                  detecciones[0].rawValue;
 
                 detener();
 
-
-                codigoInput.value =
-                  codigo;
-
+                document
+                  .getElementById(
+                    "codigoInput"
+                  )
+                  .value = codigo;
 
                 buscarProductoLocal(
                   codigo
                 );
-
 
                 return;
 
@@ -1372,12 +1279,9 @@
 
             } catch (error) {
 
-              console.error(
-                error
-              );
+              console.error(error);
 
             }
-
 
             requestAnimationFrame(
               buscar
@@ -1385,17 +1289,13 @@
 
           };
 
-
         buscar();
 
         return;
 
-
       } catch (error) {
 
-        console.error(
-          error
-        );
+        console.error(error);
 
       }
 
@@ -1419,10 +1319,8 @@
 
       await abrirDB();
 
-
       const datos =
         await cargarProductosGuardados();
-
 
       if (
         datos &&
@@ -1443,19 +1341,14 @@
 
       }
 
-
     } catch (error) {
 
-      console.error(
-        error
-      );
-
+      console.error(error);
 
       document.getElementById(
         "mensaje"
       ).className =
         "mensaje error";
-
 
       document.getElementById(
         "mensaje"
@@ -1473,4 +1366,5 @@
 
 </body>
 </html>
+
 ```
