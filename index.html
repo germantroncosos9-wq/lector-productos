@@ -421,7 +421,104 @@
         font-size: 28px;
       }
     }
-  </style>
+  
+    /* ===== CONTRASTE COMPLETO PARA TEMAS ===== */
+    body[data-theme="dark"] .app-intro h2,
+    body[data-theme="dark"] h1,
+    body[data-theme="dark"] h2,
+    body[data-theme="dark"] h3,
+    body[data-theme="dark"] label,
+    body[data-theme="dark"] .label,
+    body[data-theme="dark"] .descriptor,
+    body[data-theme="dark"] .descriptor-valor,
+    body[data-theme="dark"] .precio-label,
+    body[data-theme="dark"] .status-text,
+    body[data-theme="dark"] .ultima-actualizacion,
+    body[data-theme="dark"] .last-update,
+    body[data-theme="dark"] p,
+    body[data-theme="dark"] span {
+      color: var(--texto) !important;
+    }
+
+    body[data-theme="dark"] .app-intro p,
+    body[data-theme="dark"] footer,
+    body[data-theme="dark"] .muted,
+    body[data-theme="dark"] .secondary,
+    body[data-theme="dark"] small {
+      color: var(--texto-suave) !important;
+    }
+
+    body[data-theme="dark"] input,
+    body[data-theme="dark"] input[type="text"],
+    body[data-theme="dark"] input[type="search"] {
+      background: var(--input) !important;
+      color: var(--texto) !important;
+      border-color: var(--borde) !important;
+    }
+
+    body[data-theme="dark"] .codigo-valor,
+    body[data-theme="dark"] .oai-valor,
+    body[data-theme="dark"] .precio-valor {
+      color: #f4fff8 !important;
+    }
+
+    body[data-theme="pink"] h1,
+    body[data-theme="pink"] h2,
+    body[data-theme="pink"] h3,
+    body[data-theme="pink"] label,
+    body[data-theme="pink"] .label,
+    body[data-theme="pink"] .descriptor,
+    body[data-theme="pink"] .descriptor-valor,
+    body[data-theme="pink"] .precio-label,
+    body[data-theme="pink"] .status-text,
+    body[data-theme="pink"] .ultima-actualizacion,
+    body[data-theme="pink"] .last-update,
+    body[data-theme="pink"] p,
+    body[data-theme="pink"] span {
+      color: var(--texto) !important;
+    }
+
+    body[data-theme="pink"] .app-intro h2,
+    body[data-theme="pink"] .codigo-label,
+    body[data-theme="pink"] .codigo-valor,
+    body[data-theme="pink"] .oai-valor {
+      color: var(--verde-oscuro) !important;
+    }
+
+    body[data-theme="pink"] .app-intro p,
+    body[data-theme="pink"] footer,
+    body[data-theme="pink"] .muted,
+    body[data-theme="pink"] .secondary,
+    body[data-theme="pink"] small {
+      color: var(--texto-suave) !important;
+    }
+
+    body[data-theme="pink"] input,
+    body[data-theme="pink"] input[type="text"],
+    body[data-theme="pink"] input[type="search"] {
+      background: #ffffff !important;
+      color: #563947 !important;
+      border-color: var(--borde) !important;
+    }
+
+    body[data-theme="pink"] input::placeholder {
+      color: #9a7888 !important;
+      opacity: 1;
+    }
+
+    /* Los botones conservan texto blanco para asegurar contraste */
+    body[data-theme="dark"] button:not(.tema-btn),
+    body[data-theme="pink"] button:not(.tema-btn) {
+      color: #ffffff !important;
+    }
+
+    /* No forzar color del emoji dentro del selector */
+    body[data-theme="dark"] .tema-btn,
+    body[data-theme="pink"] .tema-btn {
+      color: inherit !important;
+    }
+
+</style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
 </head>
