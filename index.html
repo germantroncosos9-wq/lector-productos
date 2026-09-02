@@ -44,26 +44,28 @@
 
     header {
       background: var(--verde);
-      border-radius: 18px;
-      padding: 18px;
-      text-align: center;
-      margin-bottom: 15px;
+      border-radius: 16px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 72px;
+      overflow: hidden;
     }
 
     header img {
-      max-width: 150px;
-      max-height: 90px;
+      display: block;
+      width: 100%;
+      max-width: 420px;
+      max-height: 58px;
       object-fit: contain;
-      background: white;
-      border-radius: 12px;
-      padding: 6px;
+      border-radius: 10px;
     }
 
     header h1 {
-      color: white;
-      font-size: 22px;
-      margin: 10px 0 0;
+      display: none;
     }
 
     .estado {
@@ -255,6 +257,16 @@
     }
 
     @media (max-width: 400px) {
+      header {
+        min-height: 60px;
+        padding: 6px 10px;
+        border-radius: 14px;
+      }
+
+      header img {
+        max-height: 48px;
+      }
+
       .codigo-valor {
         font-size: 32px;
       }
