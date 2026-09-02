@@ -398,7 +398,7 @@
     "https://script.google.com/macros/s/AKfycbwdoaOE00ZM9cv_Lti5UCq6ayxd_NqjMhdkNmWzAU_2xWVfZukHaMytNnrmHkEKqTNp/exec";
 
   const DB_NAME = "LectorProductosDB";
-  const DB_VERSION = 3;
+  const DB_VERSION = 4;
   const STORE_NAME = "productos";
 
   let productos = [];
@@ -1211,8 +1211,7 @@
           normalizarCodigo(valor);
 
         if (
-          codigo.length >= 8 &&
-          codigo.length <= 14
+          codigo.length >= 8
         ) {
 
           if (
