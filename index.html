@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -386,8 +387,6 @@
 
 </div>
 
-
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
 
 <script>
 
@@ -1212,8 +1211,7 @@
           normalizarCodigo(valor);
 
         if (
-          codigo.length >= 8 &&
-          codigo.length <= 14
+          codigo.length >= 8
         ) {
 
           if (
@@ -1245,143 +1243,82 @@
   async function iniciarEscaner() {
 
     /*
-      Lector compatible con iPhone/iPad:
-      usamos ZXing como alternativa cuando Safari no dispone
-      de BarcodeDetector. En iOS esto suele ser mucho más fiable.
+      Intentamos utilizar BarcodeDetector
+      cuando el navegador lo soporta.
     */
 
     if (
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
+      "BarcodeDetector" in window
     ) {
-      alert(
-        "Tu navegador no permite acceder a la cámara. Abre la página directamente en Safari/Chrome y asegúrate de usar HTTPS."
-      );
-      return;
-    }
-
-    const esIOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-    /*
-      Primero intentamos ZXing en iPhone/iPad.
-      Para el resto conservamos BarcodeDetector cuando está disponible.
-    */
-    if (!esIOS && "BarcodeDetector" in window) {
 
       try {
 
         const formatos =
-          await BarcodeDetector.getSupportedFormats();
-
-        const formatosUtiles = formatos.filter(function(formato) {
-          return [
-            "ean_13",
-            "ean_8",
-            "upc_a",
-            "upc_e",
-            "code_128",
-            "code_39",
-            "itf"
-          ].includes(formato);
-        });
+          await BarcodeDetector
+            .getSupportedFormats();
 
         const detector =
           new BarcodeDetector({
-            formats:
-              formatosUtiles.length
-                ? formatosUtiles
-                : formatos
+            formats: formatos
           });
 
         const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: {
-                ideal: "environment"
-              },
-              width: {
-                ideal: 1280
-              },
-              height: {
-                ideal: 720
+          await navigator.mediaDevices
+            .getUserMedia({
+              video: {
+                facingMode: {
+                  ideal: "environment"
+                }
               }
-            },
-            audio: false
-          });
+            });
 
         const video =
           document.createElement("video");
 
-        video.setAttribute("playsinline", "");
-        video.setAttribute("autoplay", "");
-        video.muted = true;
+        video.style.position =
+          "fixed";
 
-        video.style.position = "fixed";
         video.style.top = "0";
         video.style.left = "0";
         video.style.width = "100%";
         video.style.height = "100%";
         video.style.objectFit = "cover";
         video.style.zIndex = "9999";
-        video.style.background = "#000";
 
-        document.body.appendChild(video);
+        video.autoplay = true;
+        video.playsInline = true;
 
-        video.srcObject = stream;
+        document.body.appendChild(
+          video
+        );
 
-        await video.play();
-
-        const botonCerrar =
-          document.createElement("button");
-
-        botonCerrar.textContent = "✕ CERRAR";
-        botonCerrar.style.position = "fixed";
-        botonCerrar.style.top = "20px";
-        botonCerrar.style.right = "20px";
-        botonCerrar.style.zIndex = "10001";
-        botonCerrar.style.padding = "12px 18px";
-        botonCerrar.style.border = "0";
-        botonCerrar.style.borderRadius = "12px";
-        botonCerrar.style.background = "#00843D";
-        botonCerrar.style.color = "#fff";
-        botonCerrar.style.fontWeight = "bold";
-        botonCerrar.style.fontSize = "16px";
-
-        document.body.appendChild(botonCerrar);
-
-        let detenido = false;
+        video.srcObject =
+          stream;
 
         const detener =
           function() {
 
-            if (detenido) return;
-
-            detenido = true;
-
             stream
               .getTracks()
-              .forEach(function(track) {
-                track.stop();
-              });
+              .forEach(
+                track =>
+                  track.stop()
+              );
 
             video.remove();
-            botonCerrar.remove();
 
           };
 
-        botonCerrar.onclick = detener;
 
         const buscar =
           async function() {
 
-            if (detenido) return;
-
             try {
 
               const detecciones =
-                await detector.detect(video);
+                await detector.detect(
+                  video
+                );
 
               if (
                 detecciones.length > 0
@@ -1393,10 +1330,14 @@
                 detener();
 
                 document
-                  .getElementById("codigoInput")
+                  .getElementById(
+                    "codigoInput"
+                  )
                   .value = codigo;
 
-                buscarProductoLocal(codigo);
+                buscarProductoLocal(
+                  codigo
+                );
 
                 return;
 
@@ -1404,14 +1345,13 @@
 
             } catch (error) {
 
-              console.error(
-                "Error BarcodeDetector:",
-                error
-              );
+              console.error(error);
 
             }
 
-            requestAnimationFrame(buscar);
+            requestAnimationFrame(
+              buscar
+            );
 
           };
 
@@ -1421,232 +1361,15 @@
 
       } catch (error) {
 
-        console.warn(
-          "BarcodeDetector no pudo iniciar. Se intentará ZXing.",
-          error
-        );
+        console.error(error);
 
       }
 
     }
 
-    /*
-      FALLBACK ZXING
-      Especialmente importante para iPhone/iPad/Safari.
-    */
-
-    if (
-      typeof ZXingBrowser !== "undefined"
-    ) {
-
-      let video = null;
-      let codigoReader = null;
-      let controles = null;
-
-      try {
-
-        video =
-          document.createElement("video");
-
-        video.setAttribute("playsinline", "");
-        video.setAttribute("autoplay", "");
-        video.setAttribute("muted", "");
-        video.muted = true;
-
-        video.style.position = "fixed";
-        video.style.top = "0";
-        video.style.left = "0";
-        video.style.width = "100%";
-        video.style.height = "100%";
-        video.style.objectFit = "cover";
-        video.style.zIndex = "9999";
-        video.style.background = "#000";
-
-        document.body.appendChild(video);
-
-        const marco =
-          document.createElement("div");
-
-        marco.style.position = "fixed";
-        marco.style.left = "50%";
-        marco.style.top = "50%";
-        marco.style.transform = "translate(-50%, -50%)";
-        marco.style.width = "80%";
-        marco.style.maxWidth = "420px";
-        marco.style.height = "150px";
-        marco.style.border = "3px solid #FFD500";
-        marco.style.borderRadius = "16px";
-        marco.style.zIndex = "10000";
-        marco.style.boxSizing = "border-box";
-        marco.style.pointerEvents = "none";
-
-        document.body.appendChild(marco);
-
-        const mensajeEscaner =
-          document.createElement("div");
-
-        mensajeEscaner.textContent =
-          esIOS
-            ? "Apunta la cámara al código de barras"
-            : "Apunta la cámara al código";
-
-        mensajeEscaner.style.position = "fixed";
-        mensajeEscaner.style.left = "50%";
-        mensajeEscaner.style.top = "calc(50% + 100px)";
-        mensajeEscaner.style.transform = "translateX(-50%)";
-        mensajeEscaner.style.zIndex = "10001";
-        mensajeEscaner.style.color = "#fff";
-        mensajeEscaner.style.background = "rgba(0,0,0,.65)";
-        mensajeEscaner.style.padding = "10px 16px";
-        mensajeEscaner.style.borderRadius = "12px";
-        mensajeEscaner.style.fontSize = "16px";
-        mensajeEscaner.style.textAlign = "center";
-        mensajeEscaner.style.width = "80%";
-        mensajeEscaner.style.boxSizing = "border-box";
-
-        document.body.appendChild(mensajeEscaner);
-
-        const botonCerrar =
-          document.createElement("button");
-
-        botonCerrar.textContent = "✕ CERRAR";
-        botonCerrar.style.position = "fixed";
-        botonCerrar.style.top = "20px";
-        botonCerrar.style.right = "20px";
-        botonCerrar.style.zIndex = "10001";
-        botonCerrar.style.padding = "12px 18px";
-        botonCerrar.style.border = "0";
-        botonCerrar.style.borderRadius = "12px";
-        botonCerrar.style.background = "#00843D";
-        botonCerrar.style.color = "#fff";
-        botonCerrar.style.fontWeight = "bold";
-        botonCerrar.style.fontSize = "16px";
-
-        document.body.appendChild(botonCerrar);
-
-        let detenido = false;
-
-        const detener =
-          function() {
-
-            if (detenido) return;
-
-            detenido = true;
-
-            try {
-              if (controles) {
-                controles.stop();
-              }
-            } catch (e) {
-              console.warn(e);
-            }
-
-            try {
-              if (codigoReader) {
-                codigoReader.reset();
-              }
-            } catch (e) {
-              console.warn(e);
-            }
-
-            if (video && video.srcObject) {
-              video.srcObject
-                .getTracks()
-                .forEach(function(track) {
-                  track.stop();
-                });
-            }
-
-            video.remove();
-            marco.remove();
-            mensajeEscaner.remove();
-            botonCerrar.remove();
-
-          };
-
-        botonCerrar.onclick = detener;
-
-        codigoReader =
-          new ZXingBrowser.BrowserMultiFormatReader();
-
-        controles =
-          await codigoReader.decodeFromConstraints(
-            {
-              audio: false,
-              video: {
-                facingMode: {
-                  ideal: "environment"
-                },
-                width: {
-                  ideal: 1280
-                },
-                height: {
-                  ideal: 720
-                }
-              }
-            },
-            video,
-            function(resultado, error) {
-
-              if (detenido) return;
-
-              if (resultado) {
-
-                const codigo =
-                  resultado.getText();
-
-                detener();
-
-                document
-                  .getElementById("codigoInput")
-                  .value = codigo;
-
-                buscarProductoLocal(codigo);
-
-                return;
-              }
-
-              if (
-                error &&
-                typeof ZXingBrowser !== "undefined"
-              ) {
-                // Los errores de "no encontrado todavía"
-                // son normales mientras se busca el código.
-              }
-
-            }
-          );
-
-        return;
-
-      } catch (error) {
-
-        console.error(
-          "Error iniciando ZXing:",
-          error
-        );
-
-        try {
-          if (controles) controles.stop();
-        } catch (e) {}
-
-        try {
-          if (codigoReader) codigoReader.reset();
-        } catch (e) {}
-
-        if (video) video.remove();
-        if (typeof marco !== "undefined" && marco) marco.remove();
-        if (
-          typeof mensajeEscaner !== "undefined" &&
-          mensajeEscaner
-        ) mensajeEscaner.remove();
-
-      }
-
-    }
 
     alert(
-      "No se pudo iniciar el lector de cámara. Asegúrate de abrir la página mediante HTTPS y permitir el acceso a la cámara."
+      "El escáner de cámara no está disponible en este navegador. Puedes usar un lector de códigos de barras que escriba directamente en el campo de búsqueda."
     );
 
   }
@@ -1709,3 +1432,5 @@
 
 </body>
 </html>
+
+```
