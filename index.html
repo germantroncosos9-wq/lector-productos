@@ -596,6 +596,44 @@
       color: #ffffff !important;
     }
 
+
+    /* ===== ÚLTIMO AJUSTE: BUSCADOR Y BOTÓN ESCANEAR ===== */
+    body[data-theme="dark"] input::placeholder {
+      color: #d7e2dc !important;
+      opacity: 1 !important;
+    }
+
+    body[data-theme="dark"] #btnEscanear,
+    body[data-theme="dark"] .btn-escanear,
+    body[data-theme="dark"] button[onclick*="camara"],
+    body[data-theme="dark"] button[onclick*="Camara"],
+    body[data-theme="dark"] button[onclick*="scanner"],
+    body[data-theme="dark"] button[onclick*="Scanner"] {
+      background: transparent !important;
+      color: #2ecc71 !important;
+      border-color: #2ecc71 !important;
+    }
+
+    body[data-theme="pink"] input::placeholder {
+      color: #8d6b7b !important;
+      opacity: 1 !important;
+    }
+
+    body[data-theme="pink"] #btnEscanear,
+    body[data-theme="pink"] .btn-escanear,
+    body[data-theme="pink"] button[onclick*="camara"],
+    body[data-theme="pink"] button[onclick*="Camara"],
+    body[data-theme="pink"] button[onclick*="scanner"],
+    body[data-theme="pink"] button[onclick*="Scanner"] {
+      color: #ffffff !important;
+    }
+
+
+    body[data-theme="dark"] button:not(.tema-btn) span,
+    body[data-theme="pink"] button:not(.tema-btn) span {
+      color: inherit !important;
+    }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
