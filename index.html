@@ -888,6 +888,107 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   .lista-renombrar{background:#e8efeb}.lista-borrar{background:#ffe5e5;color:#9a2424}
   .lista-msg{text-align:center;min-height:20px;font-size:12px;font-weight:700;margin:-4px 0 8px}
 
+
+  /* ===== LISTAS V2: distribución + temas ===== */
+  .lista-editor-head{
+    background:#ffffff;
+    border-radius:15px;
+    padding:13px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+  }
+  .lista-acciones-arriba{margin-top:11px}
+  .lista-scan-grande{
+    display:block;width:100%;min-height:48px;margin:9px 0 10px;
+    font-size:15px;font-weight:900;
+  }
+
+  .lista-producto{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:12px;
+  }
+  .lista-prod-info{min-width:0}
+  .lista-prod-codigo{text-align:left}
+  .lista-prod-desc{text-align:left;margin:3px 0 0}
+  .lista-cantidad-wrap{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:142px;
+  }
+  .lista-cantidad-label{font-size:10px;font-weight:800;opacity:.58;margin-bottom:3px}
+  .lista-cantidad{gap:5px}
+  .lista-cantidad button{
+    display:flex;align-items:center;justify-content:center;
+    padding:0!important;line-height:1!important;
+    width:36px;height:36px;
+  }
+  .lista-cantidad input{width:54px}
+  .lista-eliminar{
+    width:auto!important;height:auto!important;
+    margin:6px 0 0!important;padding:5px 9px!important;
+    font-size:11px!important;line-height:1.2!important;
+  }
+
+  /* Tema oscuro */
+  body[data-theme="dark"] .listas-vista{background:#101713;color:#f2f7f4}
+  body[data-theme="dark"] .lista-editor-head,
+  body[data-theme="dark"] .lista-editor-box,
+  body[data-theme="dark"] .lista-card,
+  body[data-theme="dark"] .lista-producto{
+    background:#1b2420!important;color:#f2f7f4!important;
+    box-shadow:0 3px 10px rgba(0,0,0,.28)!important;
+  }
+  body[data-theme="dark"] .listas-volver,
+  body[data-theme="dark"] .lista-renombrar,
+  body[data-theme="dark"] .lista-add,
+  body[data-theme="dark"] .lista-cantidad button{
+    background:#27342e!important;color:#f2f7f4!important;
+  }
+  body[data-theme="dark"] .listaCodigoInput,
+  body[data-theme="dark"] #listaCodigoInput,
+  body[data-theme="dark"] .lista-cantidad input{
+    background:#121a16!important;color:#f2f7f4!important;border-color:#405249!important;
+  }
+  body[data-theme="dark"] #listaCodigoInput::placeholder{color:#b9c7bf}
+  body[data-theme="dark"] .lista-borrar,
+  body[data-theme="dark"] .lista-eliminar{background:#492727!important;color:#ffdede!important}
+  body[data-theme="dark"] .lista-scan,
+  body[data-theme="dark"] .listas-nueva{background:#2ecc71!important;color:#fff!important}
+
+  /* Tema rosado */
+  body[data-theme="pink"] .listas-vista{background:#fff4f7;color:#5d3340}
+  body[data-theme="pink"] .lista-editor-head,
+  body[data-theme="pink"] .lista-editor-box,
+  body[data-theme="pink"] .lista-card,
+  body[data-theme="pink"] .lista-producto{
+    background:#fffafb!important;color:#5d3340!important;
+    box-shadow:0 3px 10px rgba(122,65,84,.10)!important;
+  }
+  body[data-theme="pink"] .lista-prod-codigo{color:#b94f72!important}
+  body[data-theme="pink"] .listas-volver,
+  body[data-theme="pink"] .lista-renombrar,
+  body[data-theme="pink"] .lista-add,
+  body[data-theme="pink"] .lista-cantidad button{
+    background:#f8dce5!important;color:#7d3850!important;
+  }
+  body[data-theme="pink"] #listaCodigoInput,
+  body[data-theme="pink"] .lista-cantidad input{
+    background:#fff!important;color:#5d3340!important;border-color:#e8bdcb!important;
+  }
+  body[data-theme="pink"] .lista-scan,
+  body[data-theme="pink"] .listas-nueva{background:#d86b8e!important;color:#fff!important}
+  body[data-theme="pink"] .lista-borrar,
+  body[data-theme="pink"] .lista-eliminar{background:#ffe1e7!important;color:#9a3e59!important}
+
+  @media(max-width:430px){
+    .lista-producto{grid-template-columns:minmax(0,1fr) 132px;gap:8px;padding:10px}
+    .lista-cantidad-wrap{min-width:132px}
+    .lista-cantidad button{width:32px;height:34px}
+    .lista-cantidad input{width:48px;height:34px}
+    .lista-prod-codigo{font-size:16px}
+    .lista-prod-desc{font-size:12px}
+  }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -1029,23 +1130,23 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         <div class="lista-editor-head">
           <h2 id="listaNombre"></h2>
           <div id="listaResumen" class="lista-resumen"></div>
+          <div class="lista-acciones lista-acciones-arriba">
+            <button id="listaRenombrar" class="lista-renombrar" type="button">✏️ RENOMBRAR</button>
+            <button id="listaBorrar" class="lista-borrar" type="button">🗑️ ELIMINAR</button>
+          </div>
         </div>
 
         <div class="lista-editor-box">
           <div class="lista-agregar">
             <input id="listaCodigoInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Código interno o de barras">
             <button id="listaAgregarBtn" class="lista-add" type="button">＋</button>
-            <button id="listaEscanearBtn" class="lista-scan" type="button">📷</button>
           </div>
+          <button id="listaEscanearBtn" class="lista-scan lista-scan-grande" type="button">📷 ESCANEAR PRODUCTO</button>
           <div id="listaMsg" class="lista-msg"></div>
         </div>
 
         <div id="listaProductos"></div>
 
-        <div class="lista-acciones">
-          <button id="listaRenombrar" class="lista-renombrar" type="button">✏️ RENOMBRAR</button>
-          <button id="listaBorrar" class="lista-borrar" type="button">🗑️ ELIMINAR</button>
-        </div>
       </div>
     </div>
   </div>
@@ -1189,13 +1290,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
     box.innerHTML = l.items.map((i,idx)=>`
       <div class="lista-producto">
-        <div class="lista-prod-codigo">${escaparHTML(i.codigoInterno)}</div>
-        <div class="lista-prod-desc">${escaparHTML(i.descriptor)}</div>
-        <div class="lista-cantidad">
-          <button type="button" data-op="menos" data-idx="${idx}">−</button>
-          <input type="number" min="1" step="1" value="${Number(i.cantidad)||1}" data-op="cantidad" data-idx="${idx}">
-          <button type="button" data-op="mas" data-idx="${idx}">＋</button>
-          <button type="button" class="lista-eliminar" data-op="eliminar" data-idx="${idx}">🗑️</button>
+        <div class="lista-prod-info">
+          <div class="lista-prod-codigo">${escaparHTML(i.codigoInterno)}</div>
+          <div class="lista-prod-desc">${escaparHTML(i.descriptor)}</div>
+        </div>
+        <div class="lista-cantidad-wrap">
+          <div class="lista-cantidad-label">Cantidad</div>
+          <div class="lista-cantidad">
+            <button type="button" data-op="menos" data-idx="${idx}" aria-label="Restar cantidad">−</button>
+            <input type="number" min="1" step="1" value="${Number(i.cantidad)||1}" data-op="cantidad" data-idx="${idx}">
+            <button type="button" data-op="mas" data-idx="${idx}" aria-label="Sumar cantidad">+</button>
+          </div>
+          <button type="button" class="lista-eliminar" data-op="eliminar" data-idx="${idx}">🗑️ Quitar</button>
         </div>
       </div>`).join("");
 
