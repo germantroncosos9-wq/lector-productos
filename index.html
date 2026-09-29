@@ -787,6 +787,32 @@
       border-color: #f1ccdc !important;
     }
 
+
+/* ===== MEJORAS EXTRA ===== */
+.codigo-card{cursor:pointer;position:relative}
+.copiado-flash{position:absolute;right:10px;top:8px;background:rgba(0,0,0,.75);color:#fff;
+padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;opacity:0;pointer-events:none;
+transition:.18s ease}
+.copiado-flash.visible{opacity:1}
+@keyframes superShimmer{0%{filter:brightness(1)}35%{filter:brightness(1.45)}
+60%{filter:brightness(1.08)}80%{filter:brightness(1.38)}100%{filter:brightness(1)}}
+.super-oai-card.super-oai-shimmer{animation:superShimmer .7s ease-out}
+.ajustes-wrap{position:relative;display:flex;justify-content:center;margin:8px 0 3px}
+.ajustes-btn{width:44px;height:44px;padding:0!important;border-radius:50%;border:1px solid var(--borde);
+background:var(--tarjeta);color:var(--texto);font-size:19px;cursor:pointer;box-shadow:0 2px 7px var(--sombra)}
+.ajustes-panel{display:none;position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:50;
+width:min(270px,calc(100vw - 40px));padding:10px 12px;border-radius:14px;background:var(--tarjeta);
+color:var(--texto);border:1px solid var(--borde);box-shadow:0 7px 22px rgba(0,0,0,.2)}
+.ajustes-panel.abierto{display:block}
+.ajuste-fila{min-height:43px;display:flex;align-items:center;justify-content:space-between;gap:14px;
+font-size:13px;font-weight:700}
+.ajuste-fila+.ajuste-fila{border-top:1px solid var(--borde)}
+.ajuste-fila input{width:20px;height:20px;accent-color:#18a957}
+body[data-theme="dark"] .ajustes-btn,body[data-theme="dark"] .ajustes-panel{
+background:#1b2420!important;color:#f2f7f4!important;border-color:#405249!important}
+body[data-theme="pink"] .ajustes-btn,body[data-theme="pink"] .ajustes-panel{
+background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!important}
+@media(prefers-reduced-motion:reduce){.super-oai-card.super-oai-shimmer{animation:none}}
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -845,7 +871,8 @@
   <div id="resultado" class="resultado">
 
     <div class="codigo-card">
-      <div class="etiqueta">Código interno</div>
+      <div class="etiqueta">Código interno · toca para copiar</div>
+      <span id="copiadoFlash" class="copiado-flash">✓ Copiado</span>
       <div
         class="codigo-valor"
         id="codigoInterno"
@@ -909,9 +936,13 @@
 
   <div id="avisoBase" class="aviso-base"></div>
 
-    <div class="sonido-control">
-      <button id="btnSonido" class="sonido-btn" type="button"
-        aria-label="Activar o desactivar sonidos" title="Sonidos">🔊</button>
+    <div class="ajustes-wrap">
+      <button id="btnAjustes" class="ajustes-btn" type="button" aria-label="Preferencias" title="Preferencias">⚙️</button>
+      <div id="panelAjustes" class="ajustes-panel">
+        <label class="ajuste-fila"><span>🔊 Sonidos</span><input id="ajusteSonido" type="checkbox"></label>
+        <label class="ajuste-fila"><span>📳 Vibración</span><input id="ajusteVibracion" type="checkbox"></label>
+        <label class="ajuste-fila"><span>✨ Animación Super OAI</span><input id="ajusteAnimacion" type="checkbox"></label>
+      </div>
     </div>
 
     <div class="tema-selector" aria-label="Seleccionar tema">
@@ -1031,37 +1062,60 @@
     tono(3135.96, 0.18, 0.20, 0.051, "sine");
   }
 
-  function actualizarBotonSonido() {
-    const btn = document.getElementById("btnSonido");
-    if (!btn) return;
 
-    btn.textContent = sonidosActivos ? "🔊" : "🔇";
-    btn.title = sonidosActivos ? "Desactivar sonidos" : "Activar sonidos";
-    btn.setAttribute(
-      "aria-label",
-      sonidosActivos ? "Desactivar sonidos" : "Activar sonidos"
-    );
+
+  /* ===== PREFERENCIAS / VIBRACIÓN / COPIAR / ANIMACIÓN ===== */
+  const VIBRACION_KEY="lectorProductosVibracion";
+  const ANIMACION_KEY="lectorProductosAnimacion";
+  let vibracionActiva=true, animacionActiva=true;
+  try{
+    vibracionActiva=localStorage.getItem(VIBRACION_KEY)!=="off";
+    animacionActiva=localStorage.getItem(ANIMACION_KEY)!=="off";
+  }catch(e){}
+
+  function vibrar(p){if(vibracionActiva&&navigator.vibrate){try{navigator.vibrate(p)}catch(e){}}}
+  function animarSuperOAI(){
+    if(!animacionActiva)return;
+    const c=document.getElementById("oaiCard"); if(!c)return;
+    c.classList.remove("super-oai-shimmer"); void c.offsetWidth;
+    c.classList.add("super-oai-shimmer");
+    setTimeout(()=>c.classList.remove("super-oai-shimmer"),800);
   }
-
-  document.getElementById("btnSonido").addEventListener("click", function() {
-    sonidosActivos = !sonidosActivos;
-
-    try {
-      localStorage.setItem(
-        SONIDO_KEY,
-        sonidosActivos ? "on" : "off"
-      );
-    } catch (e) {}
-
-    actualizarBotonSonido();
-
-    if (sonidosActivos) {
-      contextoAudio();
-      tono(760, 0.102, 0, 0.04);
-    }
+  function sincronizarAjustes(){
+    const s=document.getElementById("ajusteSonido"),v=document.getElementById("ajusteVibracion"),
+    a=document.getElementById("ajusteAnimacion");
+    if(s)s.checked=sonidosActivos;if(v)v.checked=vibracionActiva;if(a)a.checked=animacionActiva;
+  }
+  const panelAjustes=document.getElementById("panelAjustes");
+  document.getElementById("btnAjustes")?.addEventListener("click",e=>{
+    e.stopPropagation();panelAjustes.classList.toggle("abierto");sincronizarAjustes();
   });
+  panelAjustes?.addEventListener("click",e=>e.stopPropagation());
+  document.addEventListener("click",()=>panelAjustes?.classList.remove("abierto"));
+  document.getElementById("ajusteSonido")?.addEventListener("change",function(){
+    sonidosActivos=this.checked;try{localStorage.setItem(SONIDO_KEY,sonidosActivos?"on":"off")}catch(e){}
+    if(sonidosActivos){contextoAudio();tono(760,.07,0,.12)}
+  });
+  document.getElementById("ajusteVibracion")?.addEventListener("change",function(){
+    vibracionActiva=this.checked;try{localStorage.setItem(VIBRACION_KEY,vibracionActiva?"on":"off")}catch(e){}
+    if(vibracionActiva)vibrar(45)
+  });
+  document.getElementById("ajusteAnimacion")?.addEventListener("change",function(){
+    animacionActiva=this.checked;try{localStorage.setItem(ANIMACION_KEY,animacionActiva?"on":"off")}catch(e){}
+  });
+  sincronizarAjustes();
 
-  actualizarBotonSonido();
+  document.querySelector(".codigo-card")?.addEventListener("click",async()=>{
+    const codigo=(document.getElementById("codigoInterno")?.textContent||"").trim(); if(!codigo)return;
+    try{await navigator.clipboard.writeText(codigo)}
+    catch(e){
+      const t=document.createElement("textarea");t.value=codigo;t.style.position="fixed";t.style.opacity="0";
+      document.body.appendChild(t);t.select();try{document.execCommand("copy")}catch(_){}
+      t.remove();
+    }
+    const f=document.getElementById("copiadoFlash");f?.classList.add("visible");
+    vibrar(25);setTimeout(()=>f?.classList.remove("visible"),850);
+  });
 
   /* =========================================================
      CONFIGURACIÓN
@@ -1487,6 +1541,13 @@
     let producto =
       indice[codigoNormalizado];
 
+    /* También permite buscar directamente por CÓDIGO INTERNO */
+    if (!producto) {
+      producto = productos.find(p =>
+        String(p["CODIGO INTERNO"] || "").trim() === String(codigo).trim()
+      );
+    }
+
     if (!producto) {
 
       const canonico =
@@ -1520,6 +1581,7 @@
         "❌ Producto no encontrado.";
 
       sonidoError();
+      vibrar([90,60,90]);
 
       return;
 
@@ -1644,11 +1706,15 @@
     if (esSuperOAI && precioOAI !== undefined && precioOAI !== null &&
         String(precioOAI).trim() !== "") {
       sonidoSuperOAI();
+      vibrar([45,35,45,35,90]);
+      animarSuperOAI();
     } else if (precioOAI !== undefined && precioOAI !== null &&
                String(precioOAI).trim() !== "") {
       sonidoOAI();
+      vibrar([45,40,75]);
     } else {
       sonidoNormal();
+      vibrar(45);
     }
 
 
@@ -2055,9 +2121,41 @@
 
       cerrar.onclick = detenerEscaner;
 
+      const linterna = document.createElement("button");
+      linterna.id = "btnLinterna";
+      linterna.textContent = "🔦 LINTERNA";
+      linterna.style.position = "absolute";
+      linterna.style.bottom = "88px";
+      linterna.style.left = "50%";
+      linterna.style.transform = "translateX(-50%)";
+      linterna.style.zIndex = "10001";
+      linterna.style.background = "#fff8d7";
+      linterna.style.color = "#4b3b00";
+      linterna.style.padding = "11px 16px";
+      linterna.style.borderRadius = "12px";
+      linterna.style.fontWeight = "bold";
+      linterna.style.display = "none";
+
+      linterna.onclick = async function() {
+        if (!stream) return;
+        const track = stream.getVideoTracks()[0];
+        if (!track || !track.getCapabilities) return;
+        const caps = track.getCapabilities();
+        if (!caps.torch) return;
+        const encendida = linterna.dataset.on !== "1";
+        try {
+          await track.applyConstraints({advanced:[{torch:encendida}]});
+          linterna.dataset.on = encendida ? "1" : "0";
+          linterna.textContent = encendida ? "💡 LINTERNA ENCENDIDA" : "🔦 LINTERNA";
+          linterna.style.background = encendida ? "#ffe76d" : "#fff8d7";
+          vibrar(25);
+        } catch(e) {}
+      };
+
       overlay.appendChild(video);
       overlay.appendChild(marco);
       overlay.appendChild(texto);
+      overlay.appendChild(linterna);
       overlay.appendChild(cerrar);
       document.body.appendChild(overlay);
 
@@ -2211,6 +2309,14 @@
 
         video.srcObject = stream;
         await video.play();
+
+        try {
+          const track = stream.getVideoTracks()[0];
+          const caps = track?.getCapabilities?.();
+          if (caps?.torch) {
+            document.getElementById("btnLinterna").style.display = "block";
+          }
+        } catch(e) {}
 
         const buscar = async function() {
 
