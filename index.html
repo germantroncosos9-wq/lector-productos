@@ -754,6 +754,39 @@
       .app-intro h2 { font-size: 18px !important; }
     }
 
+
+    /* ===== SONIDOS ===== */
+    .sonido-control {
+      display: flex;
+      justify-content: center;
+      margin: 8px 0 2px;
+    }
+
+    .sonido-btn {
+      width: 44px;
+      height: 44px;
+      padding: 0 !important;
+      border-radius: 50%;
+      border: 1px solid var(--borde);
+      background: var(--tarjeta);
+      color: var(--texto);
+      font-size: 19px;
+      cursor: pointer;
+      box-shadow: 0 2px 7px var(--sombra);
+    }
+
+    body[data-theme="dark"] .sonido-btn {
+      background: #1b2420 !important;
+      color: #f2f7f4 !important;
+      border-color: #405249 !important;
+    }
+
+    body[data-theme="pink"] .sonido-btn {
+      background: #fffafd !important;
+      color: #563947 !important;
+      border-color: #f1ccdc !important;
+    }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -876,6 +909,11 @@
 
   <div id="avisoBase" class="aviso-base"></div>
 
+    <div class="sonido-control">
+      <button id="btnSonido" class="sonido-btn" type="button"
+        aria-label="Activar o desactivar sonidos" title="Sonidos">🔊</button>
+    </div>
+
     <div class="tema-selector" aria-label="Seleccionar tema">
       <button class="tema-btn activo" type="button" data-set-theme="default" aria-label="Tema clásico" title="Tema clásico">🌿</button>
       <button class="tema-btn" type="button" data-set-theme="dark" aria-label="Tema nocturno" title="Tema nocturno">🌙</button>
@@ -890,6 +928,117 @@
 
 
 <script>
+
+
+  /* =========================================================
+     SONIDOS DE ESCANEO Y RESULTADOS
+  ========================================================= */
+
+  const SONIDO_KEY = "lectorProductosSonidos";
+  let sonidosActivos = true;
+  let audioCtx = null;
+
+  try {
+    sonidosActivos = localStorage.getItem(SONIDO_KEY) !== "off";
+  } catch (e) {}
+
+  function contextoAudio() {
+    if (!audioCtx) {
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextClass) return null;
+      audioCtx = new AudioContextClass();
+    }
+
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
+
+    return audioCtx;
+  }
+
+  function tono(frecuencia, duracion, retraso = 0, volumen = 0.055, tipo = "sine") {
+    if (!sonidosActivos) return;
+
+    const ctx = contextoAudio();
+    if (!ctx) return;
+
+    const inicio = ctx.currentTime + retraso;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = tipo;
+    osc.frequency.setValueAtTime(frecuencia, inicio);
+
+    gain.gain.setValueAtTime(0.0001, inicio);
+    gain.gain.exponentialRampToValueAtTime(volumen, inicio + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(inicio);
+    osc.stop(inicio + duracion + 0.02);
+  }
+
+  function sonidoLectura() {
+    tono(1050, 0.065, 0, 0.045, "square");
+  }
+
+  function sonidoNormal() {
+    tono(660, 0.09, 0, 0.05);
+    tono(880, 0.12, 0.075, 0.05);
+  }
+
+  function sonidoError() {
+    tono(260, 0.13, 0, 0.06, "square");
+    tono(190, 0.18, 0.13, 0.055, "square");
+  }
+
+  function sonidoOAI() {
+    tono(620, 0.10, 0, 0.05);
+    tono(830, 0.11, 0.08, 0.055);
+    tono(1040, 0.15, 0.17, 0.055);
+  }
+
+  function sonidoSuperOAI() {
+    tono(523.25, 0.11, 0, 0.05);
+    tono(659.25, 0.11, 0.08, 0.05);
+    tono(783.99, 0.11, 0.16, 0.055);
+    tono(1046.50, 0.22, 0.24, 0.06);
+  }
+
+  function actualizarBotonSonido() {
+    const btn = document.getElementById("btnSonido");
+    if (!btn) return;
+
+    btn.textContent = sonidosActivos ? "🔊" : "🔇";
+    btn.title = sonidosActivos ? "Desactivar sonidos" : "Activar sonidos";
+    btn.setAttribute(
+      "aria-label",
+      sonidosActivos ? "Desactivar sonidos" : "Activar sonidos"
+    );
+  }
+
+  document.getElementById("btnSonido").addEventListener("click", function() {
+    sonidosActivos = !sonidosActivos;
+
+    try {
+      localStorage.setItem(
+        SONIDO_KEY,
+        sonidosActivos ? "on" : "off"
+      );
+    } catch (e) {}
+
+    actualizarBotonSonido();
+
+    if (sonidosActivos) {
+      contextoAudio();
+      tono(760, 0.07, 0, 0.04);
+    }
+  });
+
+  actualizarBotonSonido();
 
   /* =========================================================
      CONFIGURACIÓN
@@ -1347,6 +1496,8 @@
       mensaje.textContent =
         "❌ Producto no encontrado.";
 
+      sonidoError();
+
       return;
 
     }
@@ -1463,6 +1614,18 @@
         "oculto"
       );
 
+    }
+
+
+    /* Sonido del resultado: solo uno según el tipo de producto */
+    if (esSuperOAI && precioOAI !== undefined && precioOAI !== null &&
+        String(precioOAI).trim() !== "") {
+      sonidoSuperOAI();
+    } else if (precioOAI !== undefined && precioOAI !== null &&
+               String(precioOAI).trim() !== "") {
+      sonidoOAI();
+    } else {
+      sonidoNormal();
     }
 
 
@@ -1928,6 +2091,7 @@
         return;
       }
 
+      sonidoLectura();
       detenerEscaner();
 
       const input = document.getElementById("codigoInput");
