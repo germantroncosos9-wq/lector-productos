@@ -839,6 +839,55 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     text-align: center !important;
   }
 
+
+  /* ===== EXPERIMENTAL: LISTAS PERSONALIZADAS ===== */
+  .listas-btn-principal{
+    width:100%;margin:8px 0 4px;padding:11px 12px;border:0;border-radius:12px;
+    font-weight:800;font-size:14px;cursor:pointer;background:#e9f7ef;color:#08783d;
+  }
+  .listas-vista{
+    display:none;position:fixed;inset:0;z-index:8000;background:#f4f6f5;overflow:auto;
+    padding:18px 14px 40px;
+  }
+  body[data-theme="dark"] .listas-vista{background:#101713;color:#f2f7f4}
+  body[data-theme="pink"] .listas-vista{background:#fff4f7}
+  .listas-panel{max-width:620px;margin:0 auto}
+  .listas-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .listas-top h2{margin:0;flex:1;text-align:center;font-size:21px}
+  .listas-volver{border:0;border-radius:10px;padding:9px 11px;font-weight:800;cursor:pointer}
+  .listas-nueva{width:100%;padding:12px;border:0;border-radius:12px;background:#0b8f4d;color:#fff;font-weight:800;font-size:15px;margin-bottom:14px}
+  .lista-card,.lista-editor-box{
+    background:#fff;border-radius:15px;padding:13px;margin-bottom:10px;box-shadow:0 3px 10px rgba(0,0,0,.08)
+  }
+  body[data-theme="dark"] .lista-card,body[data-theme="dark"] .lista-editor-box{background:#1b2420;color:#f2f7f4}
+  .lista-card{cursor:pointer}
+  .lista-card-titulo{font-weight:900;font-size:16px}
+  .lista-card-meta{font-size:12px;opacity:.65;margin-top:3px}
+  .lista-vacia{text-align:center;opacity:.62;padding:28px 10px}
+  .lista-editor-head{text-align:center;margin-bottom:10px}
+  .lista-editor-head h2{margin:0 0 3px;font-size:20px}
+  .lista-resumen{font-size:12px;opacity:.68}
+  .lista-agregar{display:flex;gap:7px;margin-bottom:12px}
+  .lista-agregar input{min-width:0;flex:1;padding:11px;border:1px solid #ccd5d0;border-radius:11px;font-size:16px}
+  .lista-agregar button{border:0;border-radius:11px;padding:10px 12px;font-weight:800;cursor:pointer}
+  .lista-scan{background:#0b8f4d;color:white}
+  .lista-add{background:#e8efeB;color:#164f34}
+  .lista-producto{
+    background:#fff;border-radius:14px;padding:12px;margin-bottom:9px;box-shadow:0 2px 8px rgba(0,0,0,.07)
+  }
+  body[data-theme="dark"] .lista-producto{background:#1b2420}
+  .lista-prod-codigo{text-align:center;font-weight:900;font-size:18px;color:#08783d}
+  body[data-theme="dark"] .lista-prod-codigo{color:#2ecc71}
+  .lista-prod-desc{text-align:center;font-size:13px;margin:3px 0 10px}
+  .lista-cantidad{display:flex;justify-content:center;align-items:center;gap:7px}
+  .lista-cantidad button{width:38px;height:36px;border:0;border-radius:10px;font-size:20px;font-weight:900;cursor:pointer}
+  .lista-cantidad input{width:68px;height:36px;text-align:center;border:1px solid #ccd5d0;border-radius:10px;font-size:16px;font-weight:800}
+  .lista-eliminar{margin-left:5px!important;font-size:15px!important;background:#ffe9e9!important}
+  .lista-acciones{display:flex;gap:8px;margin-top:14px}
+  .lista-acciones button{flex:1;border:0;border-radius:11px;padding:10px;font-weight:800;cursor:pointer}
+  .lista-renombrar{background:#e8efeb}.lista-borrar{background:#ffe5e5;color:#9a2424}
+  .lista-msg{text-align:center;min-height:20px;font-size:12px;font-weight:700;margin:-4px 0 8px}
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -961,6 +1010,46 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
   <div id="avisoBase" class="aviso-base"></div>
 
+
+  <button id="btnListas" class="listas-btn-principal" type="button">📋 LISTAS</button>
+
+  <div id="listasVista" class="listas-vista">
+    <div class="listas-panel">
+      <div class="listas-top">
+        <button id="listasVolver" class="listas-volver" type="button">← VOLVER</button>
+        <h2>📋 Mis listas</h2>
+      </div>
+
+      <div id="listasInicio">
+        <button id="nuevaLista" class="listas-nueva" type="button">＋ NUEVA LISTA</button>
+        <div id="listasGuardadas"></div>
+      </div>
+
+      <div id="listaEditor" style="display:none">
+        <div class="lista-editor-head">
+          <h2 id="listaNombre"></h2>
+          <div id="listaResumen" class="lista-resumen"></div>
+        </div>
+
+        <div class="lista-editor-box">
+          <div class="lista-agregar">
+            <input id="listaCodigoInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Código interno o de barras">
+            <button id="listaAgregarBtn" class="lista-add" type="button">＋</button>
+            <button id="listaEscanearBtn" class="lista-scan" type="button">📷</button>
+          </div>
+          <div id="listaMsg" class="lista-msg"></div>
+        </div>
+
+        <div id="listaProductos"></div>
+
+        <div class="lista-acciones">
+          <button id="listaRenombrar" class="lista-renombrar" type="button">✏️ RENOMBRAR</button>
+          <button id="listaBorrar" class="lista-borrar" type="button">🗑️ ELIMINAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
     <div class="ajustes-wrap">
       <button id="btnAjustes" class="ajustes-btn" type="button" aria-label="Preferencias" title="Preferencias">⚙️</button>
       <div id="panelAjustes" class="ajustes-panel">
@@ -984,6 +1073,211 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
 
 <script>
+
+  /* =========================================================
+     EXPERIMENTAL: LISTAS PERSONALIZADAS
+  ========================================================= */
+  const LISTAS_KEY = "lectorProductosListasV1";
+  let listasPersonalizadas = [];
+  let listaActivaId = null;
+  let escaneoParaLista = false;
+
+  function cargarListasPersonalizadas(){
+    try { listasPersonalizadas = JSON.parse(localStorage.getItem(LISTAS_KEY) || "[]"); }
+    catch(e){ listasPersonalizadas = []; }
+  }
+
+  function guardarListasPersonalizadas(){
+    localStorage.setItem(LISTAS_KEY, JSON.stringify(listasPersonalizadas));
+  }
+
+  function escaparHTML(v){
+    return String(v ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function buscarProductoParaLista(codigo){
+    const normal = normalizarCodigo(codigo);
+    let p = indice[normal];
+    if(!p){
+      p = productos.find(x =>
+        String(x["CODIGO INTERNO"] || "").trim() === String(codigo).trim()
+      );
+    }
+    if(!p){
+      const canon = codigoCanonico(normal);
+      if(canon) p = indice[canon];
+    }
+    return p || null;
+  }
+
+  function listaActiva(){
+    return listasPersonalizadas.find(l => l.id === listaActivaId) || null;
+  }
+
+  function abrirListas(){
+    escaneoParaLista = false;
+    document.getElementById("listasVista").style.display = "block";
+    document.getElementById("listasInicio").style.display = "block";
+    document.getElementById("listaEditor").style.display = "none";
+    renderListas();
+  }
+
+  function cerrarListas(){
+    escaneoParaLista = false;
+    listaActivaId = null;
+    document.getElementById("listasVista").style.display = "none";
+  }
+
+  function renderListas(){
+    const box = document.getElementById("listasGuardadas");
+    if(!listasPersonalizadas.length){
+      box.innerHTML = '<div class="lista-vacia">Todavía no tienes listas.<br>Crea una para empezar 📦</div>';
+      return;
+    }
+    box.innerHTML = listasPersonalizadas.map(l => {
+      const unidades = l.items.reduce((s,i)=>s+Number(i.cantidad||0),0);
+      return `<div class="lista-card" data-lista-id="${escaparHTML(l.id)}">
+        <div class="lista-card-titulo">📋 ${escaparHTML(l.nombre)}</div>
+        <div class="lista-card-meta">${l.items.length} productos · ${unidades} unidades</div>
+      </div>`;
+    }).join("");
+    box.querySelectorAll(".lista-card").forEach(el => {
+      el.onclick = () => abrirLista(el.dataset.listaId);
+    });
+  }
+
+  function crearLista(){
+    const nombre = prompt("Nombre de la nueva lista:", "Nueva lista");
+    if(!nombre || !nombre.trim()) return;
+    const l = { id: String(Date.now()), nombre: nombre.trim(), creada: Date.now(), items: [] };
+    listasPersonalizadas.unshift(l);
+    guardarListasPersonalizadas();
+    abrirLista(l.id);
+  }
+
+  function abrirLista(id){
+    listaActivaId = id;
+    document.getElementById("listasInicio").style.display = "none";
+    document.getElementById("listaEditor").style.display = "block";
+    document.getElementById("listaCodigoInput").value = "";
+    renderListaActiva();
+  }
+
+  function volverAListas(){
+    escaneoParaLista = false;
+    listaActivaId = null;
+    document.getElementById("listaEditor").style.display = "none";
+    document.getElementById("listasInicio").style.display = "block";
+    renderListas();
+  }
+
+  function renderListaActiva(){
+    const l = listaActiva();
+    if(!l) return volverAListas();
+    document.getElementById("listaNombre").textContent = "📋 " + l.nombre;
+    const unidades = l.items.reduce((s,i)=>s+Number(i.cantidad||0),0);
+    document.getElementById("listaResumen").textContent =
+      `${l.items.length} productos · ${unidades} unidades`;
+
+    const box = document.getElementById("listaProductos");
+    if(!l.items.length){
+      box.innerHTML = '<div class="lista-vacia">Escanea o escribe un código para agregar productos.</div>';
+      return;
+    }
+
+    box.innerHTML = l.items.map((i,idx)=>`
+      <div class="lista-producto">
+        <div class="lista-prod-codigo">${escaparHTML(i.codigoInterno)}</div>
+        <div class="lista-prod-desc">${escaparHTML(i.descriptor)}</div>
+        <div class="lista-cantidad">
+          <button type="button" data-op="menos" data-idx="${idx}">−</button>
+          <input type="number" min="1" step="1" value="${Number(i.cantidad)||1}" data-op="cantidad" data-idx="${idx}">
+          <button type="button" data-op="mas" data-idx="${idx}">＋</button>
+          <button type="button" class="lista-eliminar" data-op="eliminar" data-idx="${idx}">🗑️</button>
+        </div>
+      </div>`).join("");
+
+    box.querySelectorAll("[data-op]").forEach(el=>{
+      const op=el.dataset.op, idx=Number(el.dataset.idx);
+      if(op==="cantidad"){
+        el.onchange=()=>{
+          const n=Math.max(1,parseInt(el.value,10)||1);
+          l.items[idx].cantidad=n; guardarListasPersonalizadas(); renderListaActiva();
+        };
+      }else{
+        el.onclick=()=>{
+          if(op==="mas") l.items[idx].cantidad++;
+          if(op==="menos") l.items[idx].cantidad=Math.max(1,l.items[idx].cantidad-1);
+          if(op==="eliminar") l.items.splice(idx,1);
+          guardarListasPersonalizadas(); renderListaActiva();
+        };
+      }
+    });
+  }
+
+  function agregarCodigoALista(codigo){
+    const l = listaActiva();
+    if(!l) return;
+    const msg = document.getElementById("listaMsg");
+    const p = buscarProductoParaLista(codigo);
+    if(!p){
+      msg.textContent = "❌ Producto no encontrado";
+      sonidoError(); vibrar([90,60,90]);
+      setTimeout(()=>{ if(msg.textContent.includes("no encontrado")) msg.textContent=""; },1400);
+      return;
+    }
+    const interno = String(p["CODIGO INTERNO"] || "").trim();
+    const existente = l.items.find(i => i.codigoInterno === interno);
+    if(existente) existente.cantidad += 1;
+    else l.items.push({
+      codigoInterno: interno,
+      descriptor: String(p["DESCRIPTOR"] || "").trim(),
+      cantidad: 1
+    });
+    guardarListasPersonalizadas();
+    msg.textContent = existente ? `✓ ${interno} · cantidad ${existente.cantidad}` : `✓ ${interno} agregado`;
+    sonidoNormal(); vibrar(45);
+    renderListaActiva();
+    const input=document.getElementById("listaCodigoInput");
+    input.value=""; input.focus();
+  }
+
+  function renombrarLista(){
+    const l=listaActiva(); if(!l) return;
+    const n=prompt("Nuevo nombre:",l.nombre);
+    if(!n || !n.trim()) return;
+    l.nombre=n.trim(); guardarListasPersonalizadas(); renderListaActiva();
+  }
+
+  function borrarLista(){
+    const l=listaActiva(); if(!l) return;
+    if(!confirm(`¿Eliminar la lista "${l.nombre}"?`)) return;
+    listasPersonalizadas=listasPersonalizadas.filter(x=>x.id!==l.id);
+    guardarListasPersonalizadas(); volverAListas();
+  }
+
+  cargarListasPersonalizadas();
+
+  document.getElementById("btnListas").onclick=abrirListas;
+  document.getElementById("listasVolver").onclick=()=>{
+    if(document.getElementById("listaEditor").style.display!=="none") volverAListas();
+    else cerrarListas();
+  };
+  document.getElementById("nuevaLista").onclick=crearLista;
+  document.getElementById("listaAgregarBtn").onclick=()=>agregarCodigoALista(document.getElementById("listaCodigoInput").value);
+  document.getElementById("listaCodigoInput").addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();agregarCodigoALista(e.currentTarget.value);}
+  });
+  document.getElementById("listaEscanearBtn").onclick=()=>{
+    escaneoParaLista=true;
+    iniciarEscaner();
+  };
+  document.getElementById("listaRenombrar").onclick=renombrarLista;
+  document.getElementById("listaBorrar").onclick=borrarLista;
+
+
 
 
   /* =========================================================
@@ -2329,6 +2623,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       sonidoLectura();
       detenerEscaner();
+
+      if (escaneoParaLista && listaActivaId) {
+        escaneoParaLista = false;
+        agregarCodigoALista(valor);
+        return;
+      }
 
       const input = document.getElementById("codigoInput");
       input.value = valor;
