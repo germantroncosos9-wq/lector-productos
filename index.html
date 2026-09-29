@@ -989,6 +989,21 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     .lista-prod-desc{font-size:12px}
   }
 
+
+  /* ===== LISTAS V3: botón principal acorde al tema ===== */
+  body[data-theme="dark"] .listas-btn-principal{
+    background:#1b2420 !important;
+    color:#2ecc71 !important;
+    border:1px solid #2ecc71 !important;
+    box-shadow:0 3px 10px rgba(0,0,0,.28) !important;
+  }
+  body[data-theme="pink"] .listas-btn-principal{
+    background:#fff0f5 !important;
+    color:#b94f72 !important;
+    border:1px solid #e6a9bc !important;
+    box-shadow:0 3px 10px rgba(122,65,84,.10) !important;
+  }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -1182,6 +1197,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   let listasPersonalizadas = [];
   let listaActivaId = null;
   let escaneoParaLista = false;
+  let escaneoParaListaCerrado = false;
 
   function cargarListasPersonalizadas(){
     try { listasPersonalizadas = JSON.parse(localStorage.getItem(LISTAS_KEY) || "[]"); }
@@ -1347,7 +1363,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     sonidoNormal(); vibrar(45);
     renderListaActiva();
     const input=document.getElementById("listaCodigoInput");
-    input.value=""; input.focus();
+    input.value="";
+    if (!escaneoParaListaCerrado) input.focus();
+    escaneoParaListaCerrado = false;
   }
 
   function renombrarLista(){
@@ -2732,6 +2750,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       if (escaneoParaLista && listaActivaId) {
         escaneoParaLista = false;
+        escaneoParaListaCerrado = true;
         agregarCodigoALista(valor);
         return;
       }
