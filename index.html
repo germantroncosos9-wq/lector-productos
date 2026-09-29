@@ -958,7 +958,7 @@
     return audioCtx;
   }
 
-  function tono(frecuencia, duracion, retraso = 0, volumen = 0.055, tipo = "sine") {
+  function tono(frecuencia, duracion, retraso = 0, volumen = 0.10, tipo = "sine") {
     if (!sonidosActivos) return;
 
     const ctx = contextoAudio();
@@ -982,7 +982,7 @@
   }
 
   function sonidoLectura() {
-    tono(1050, 0.065, 0, 0.045, "square");
+    tono(1050, 0.065, 0, 0.085, "square");
   }
 
   function sonidoNormal() {
@@ -991,8 +991,8 @@
   }
 
   function sonidoError() {
-    tono(260, 0.13, 0, 0.06, "square");
-    tono(190, 0.18, 0.13, 0.055, "square");
+    tono(260, 0.13, 0, 0.115, "square");
+    tono(190, 0.18, 0.13, 0.105, "square");
   }
 
   function sonidoOAI() {
@@ -1002,10 +1002,16 @@
   }
 
   function sonidoSuperOAI() {
-    tono(523.25, 0.11, 0, 0.05);
-    tono(659.25, 0.11, 0.08, 0.05);
-    tono(783.99, 0.11, 0.16, 0.055);
-    tono(1046.50, 0.22, 0.24, 0.06);
+    /* Arpegio brillante tipo "shimmer": campanitas ascendentes */
+    tono(659.25, 0.13, 0.00, 0.10, "sine");
+    tono(987.77, 0.16, 0.055, 0.10, "sine");
+    tono(1318.51, 0.19, 0.11, 0.105, "sine");
+    tono(1567.98, 0.22, 0.17, 0.10, "sine");
+    tono(1975.53, 0.30, 0.23, 0.09, "sine");
+
+    /* Armónicos suaves para darle ese brillo/chispa */
+    tono(2637.02, 0.24, 0.12, 0.04, "sine");
+    tono(3135.96, 0.28, 0.20, 0.035, "sine");
   }
 
   function actualizarBotonSonido() {
