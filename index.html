@@ -794,9 +794,20 @@
 padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;opacity:0;pointer-events:none;
 transition:.18s ease}
 .copiado-flash.visible{opacity:1}
-@keyframes superShimmer{0%{filter:brightness(1)}35%{filter:brightness(1.45)}
-60%{filter:brightness(1.08)}80%{filter:brightness(1.38)}100%{filter:brightness(1)}}
-.super-oai-card.super-oai-shimmer{animation:superShimmer .7s ease-out}
+.codigo-linea{display:flex;align-items:center;justify-content:center;gap:9px}
+.btn-copiar-codigo{width:34px;height:34px;padding:6px!important;border:0;background:transparent;color:inherit;
+opacity:.72;cursor:pointer;border-radius:8px;flex:0 0 auto}
+.btn-copiar-codigo:active{background:rgba(0,0,0,.08);transform:scale(.94)}
+.btn-copiar-codigo svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;
+stroke-linecap:round;stroke-linejoin:round}
+@keyframes superShimmer{
+0%{filter:brightness(1);transform:scale(1);box-shadow:0 0 0 rgba(255,210,45,0)}
+18%{filter:brightness(1.55);transform:scale(1.018);box-shadow:0 0 24px rgba(255,210,45,.70)}
+38%{filter:brightness(1.10);transform:scale(1);box-shadow:0 0 8px rgba(255,210,45,.25)}
+58%{filter:brightness(1.62);transform:scale(1.022);box-shadow:0 0 30px rgba(255,220,70,.82)}
+78%{filter:brightness(1.18);transform:scale(1.006);box-shadow:0 0 14px rgba(255,210,45,.38)}
+100%{filter:brightness(1);transform:scale(1);box-shadow:0 0 0 rgba(255,210,45,0)}}
+.super-oai-card.super-oai-shimmer{animation:superShimmer 1.2s ease-out}
 .ajustes-wrap{position:relative;display:flex;justify-content:center;margin:8px 0 3px}
 .ajustes-btn{width:44px;height:44px;padding:0!important;border-radius:50%;border:1px solid var(--borde);
 background:var(--tarjeta);color:var(--texto);font-size:19px;cursor:pointer;box-shadow:0 2px 7px var(--sombra)}
@@ -871,12 +882,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   <div id="resultado" class="resultado">
 
     <div class="codigo-card">
-      <div class="etiqueta">Código interno · toca para copiar</div>
+      <div class="etiqueta">Código interno</div>
+      <div class="codigo-linea">
+        <div class="codigo-valor" id="codigoInterno"></div>
+        <button id="btnCopiarCodigo" class="btn-copiar-codigo" type="button"
+          aria-label="Copiar código interno" title="Copiar código interno">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+            <rect x="3" y="8" width="13" height="13" rx="2"/>
+          </svg>
+        </button>
+      </div>
       <span id="copiadoFlash" class="copiado-flash">✓ Copiado</span>
-      <div
-        class="codigo-valor"
-        id="codigoInterno"
-      ></div>
     </div>
 
     <div class="tarjeta">
@@ -1079,7 +1096,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     const c=document.getElementById("oaiCard"); if(!c)return;
     c.classList.remove("super-oai-shimmer"); void c.offsetWidth;
     c.classList.add("super-oai-shimmer");
-    setTimeout(()=>c.classList.remove("super-oai-shimmer"),800);
+    setTimeout(()=>c.classList.remove("super-oai-shimmer"),1300);
   }
   function sincronizarAjustes(){
     const s=document.getElementById("ajusteSonido"),v=document.getElementById("ajusteVibracion"),
@@ -1105,7 +1122,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   });
   sincronizarAjustes();
 
-  document.querySelector(".codigo-card")?.addEventListener("click",async()=>{
+  document.getElementById("btnCopiarCodigo")?.addEventListener("click",async(e)=>{\n    e.stopPropagation();
     const codigo=(document.getElementById("codigoInterno")?.textContent||"").trim(); if(!codigo)return;
     try{await navigator.clipboard.writeText(codigo)}
     catch(e){
@@ -2137,20 +2154,45 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       linterna.style.display = "none";
 
       linterna.onclick = async function() {
-        if (!stream) return;
-        const track = stream.getVideoTracks()[0];
-        if (!track || !track.getCapabilities) return;
-        const caps = track.getCapabilities();
-        if (!caps.torch) return;
+        const activo = stream || video?.srcObject;
+        const track = activo?.getVideoTracks?.()[0];
+        if (!track) return;
+
         const encendida = linterna.dataset.on !== "1";
+
         try {
-          await track.applyConstraints({advanced:[{torch:encendida}]});
+          await track.applyConstraints({ advanced: [{ torch: encendida }] });
           linterna.dataset.on = encendida ? "1" : "0";
           linterna.textContent = encendida ? "💡 LINTERNA ENCENDIDA" : "🔦 LINTERNA";
           linterna.style.background = encendida ? "#ffe76d" : "#fff8d7";
           vibrar(25);
-        } catch(e) {}
+        } catch(e) {
+          console.warn("Linterna no disponible:", e);
+          linterna.textContent = "🔦 NO DISPONIBLE";
+          setTimeout(() => {
+            if (!cerrado) linterna.textContent = "🔦 LINTERNA";
+          }, 1200);
+        }
       };
+
+      async function detectarLinterna() {
+        for (let intento = 0; intento < 15 && !cerrado; intento++) {
+          const activo = stream || video?.srcObject;
+          const track = activo?.getVideoTracks?.()[0];
+
+          if (track) {
+            try {
+              const caps = track.getCapabilities?.() || {};
+              if (caps.torch === true || !esIOS) {
+                linterna.style.display = "block";
+                return;
+              }
+            } catch(e) {}
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 120));
+        }
+      }
 
       overlay.appendChild(video);
       overlay.appendChild(marco);
@@ -2268,6 +2310,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
             }
           );
 
+      await detectarLinterna();
+
+        await detectarLinterna();
         return;
 
       } catch (error) {
@@ -2310,13 +2355,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         video.srcObject = stream;
         await video.play();
 
-        try {
-          const track = stream.getVideoTracks()[0];
-          const caps = track?.getCapabilities?.();
-          if (caps?.torch) {
-            document.getElementById("btnLinterna").style.display = "block";
-          }
-        } catch(e) {}
+        await detectarLinterna();
 
         const buscar = async function() {
 
