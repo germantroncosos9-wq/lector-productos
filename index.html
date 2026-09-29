@@ -718,6 +718,42 @@
       color: #8f4567 !important;
     }
 
+
+    /* ===== VISTA COMPACTA: RESULTADOS MÁS ARRIBA ===== */
+    header { margin-bottom: 7px !important; }
+    header img { max-height: 105px; object-fit: cover; }
+    .app-intro { margin: 0 0 8px !important; }
+    .app-intro h2 { font-size: 19px !important; margin-bottom: 1px !important; }
+    .app-intro p { font-size: 12px !important; }
+
+    .estado {
+      padding: 6px 10px !important;
+      margin-bottom: 7px !important;
+      font-size: 11px !important;
+      line-height: 1.35;
+    }
+
+    .buscador {
+      padding: 10px !important;
+      margin-bottom: 8px !important;
+      border-radius: 14px !important;
+    }
+
+    .buscador input { padding: 11px !important; font-size: 16px !important; }
+    .botones { margin-top: 7px !important; gap: 7px !important; }
+    .botones button { padding: 10px 7px !important; font-size: 13px !important; }
+    .mensaje { padding: 7px 10px !important; font-size: 13px !important; }
+
+    .aviso-base {
+      margin: 10px 0 4px !important;
+    }
+
+    @media (max-width: 400px) {
+      header img { max-height: 88px; }
+      .contenedor { padding-top: 9px; }
+      .app-intro h2 { font-size: 18px !important; }
+    }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -751,8 +787,6 @@
       <strong id="ultimaActualizacion">Sin datos</strong>
     </div>
   </div>
-
-  <div id="avisoBase" class="aviso-base"></div>
 
   <div class="buscador">
 
@@ -841,6 +875,8 @@
   </div>
 
   
+    <div id="avisoBase" class="aviso-base"></div>
+
     <div class="tema-selector" aria-label="Seleccionar tema">
       <button class="tema-btn activo" type="button" data-set-theme="default" aria-label="Tema clásico" title="Tema clásico">🌿</button>
       <button class="tema-btn" type="button" data-set-theme="dark" aria-label="Tema nocturno" title="Tema nocturno">🌙</button>
