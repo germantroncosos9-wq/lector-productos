@@ -1122,7 +1122,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   });
   sincronizarAjustes();
 
-  document.getElementById("btnCopiarCodigo")?.addEventListener("click",async(e)=>{\n    e.stopPropagation();
+  document.getElementById("btnCopiarCodigo")?.addEventListener("click",async(e)=>{
+    e.stopPropagation();
     const codigo=(document.getElementById("codigoInterno")?.textContent||"").trim(); if(!codigo)return;
     try{await navigator.clipboard.writeText(codigo)}
     catch(e){
