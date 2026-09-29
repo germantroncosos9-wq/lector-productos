@@ -1237,9 +1237,24 @@
     if (contenido) {
       aviso.textContent = "📢 " + contenido;
       aviso.style.display = "block";
+
+      try {
+        localStorage.setItem("lectorProductosAvisoBase", contenido);
+      } catch (e) {}
     } else {
-      aviso.textContent = "";
-      aviso.style.display = "none";
+      /* No borramos un aviso ya visible por una respuesta vacía accidental. */
+      const guardado = (() => {
+        try {
+          return localStorage.getItem("lectorProductosAvisoBase") || "";
+        } catch (e) {
+          return "";
+        }
+      })();
+
+      if (guardado) {
+        aviso.textContent = "📢 " + guardado;
+        aviso.style.display = "block";
+      }
     }
   }
 
@@ -2105,6 +2120,15 @@
     try {
 
       await abrirDB();
+
+      try {
+        const avisoGuardado =
+          localStorage.getItem("lectorProductosAvisoBase");
+
+        if (avisoGuardado) {
+          mostrarAvisoBase(avisoGuardado);
+        }
+      } catch (e) {}
 
       cargarAvisoBase();
 
