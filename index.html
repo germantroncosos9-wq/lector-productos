@@ -2162,7 +2162,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         const encendida = linterna.dataset.on !== "1";
 
         try {
-          await track.applyConstraints({ advanced: [{ torch: encendida }] });
+          let aplicado = false;
+
+          try {
+            await track.applyConstraints({ advanced: [{ torch: encendida }] });
+            aplicado = true;
+          } catch (primerError) {
+            /* Segundo intento para algunos Chrome/Android */
+            await track.applyConstraints({ torch: encendida });
+            aplicado = true;
+          }
+
+          if (!aplicado) return;
           linterna.dataset.on = encendida ? "1" : "0";
           linterna.textContent = encendida ? "💡 LINTERNA ENCENDIDA" : "🔦 LINTERNA";
           linterna.style.background = encendida ? "#ffe76d" : "#fff8d7";
@@ -2176,25 +2187,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         }
       };
 
-      async function detectarLinterna() {
-        for (let intento = 0; intento < 15 && !cerrado; intento++) {
-          const activo = stream || video?.srcObject;
-          const track = activo?.getVideoTracks?.()[0];
-
-          if (track) {
-            try {
-              const caps = track.getCapabilities?.() || {};
-              if (caps.torch === true || !esIOS) {
-                linterna.style.display = "block";
-                return;
-              }
-            } catch(e) {}
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 120));
-        }
-      }
-
       overlay.appendChild(video);
       overlay.appendChild(marco);
       overlay.appendChild(texto);
@@ -2202,6 +2194,31 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       overlay.appendChild(cerrar);
       document.body.appendChild(overlay);
 
+    }
+
+    async function detectarLinterna() {
+      const linterna = document.getElementById("btnLinterna");
+      if (!linterna) return;
+
+      for (let intento = 0; intento < 15 && !cerrado; intento++) {
+        const activo = stream || video?.srcObject;
+        const track = activo?.getVideoTracks?.()[0];
+
+        if (track) {
+          try {
+            const caps = track.getCapabilities?.() || {};
+
+            /* En Android mostramos el botón y probamos torch al tocar.
+               En otros dispositivos solo si la cámara declara soporte real. */
+            if (caps.torch === true || !esIOS) {
+              linterna.style.display = "block";
+              return;
+            }
+          } catch(e) {}
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 120));
+      }
     }
 
     function detenerEscaner() {
@@ -2310,8 +2327,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
             }
           );
-
-      await detectarLinterna();
 
         await detectarLinterna();
         return;
