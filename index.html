@@ -2124,8 +2124,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       cerrar.style.left = "50%";
       cerrar.style.transform = "translateX(-50%)";
       cerrar.style.zIndex = "10001";
-      cerrar.style.background = "white";
-      cerrar.style.color = "#00843D";
+      cerrar.style.background = "#007A3D";
+      cerrar.style.color = "#FFFFFF";
+      cerrar.style.border = "2px solid rgba(255,255,255,.85)";
+      cerrar.style.boxShadow = "0 3px 12px rgba(0,0,0,.35)";
       cerrar.style.padding = "13px 20px";
       cerrar.style.borderRadius = "12px";
       cerrar.style.fontWeight = "bold";
@@ -2140,8 +2142,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       linterna.style.left = "50%";
       linterna.style.transform = "translateX(-50%)";
       linterna.style.zIndex = "10001";
-      linterna.style.background = "#fff8d7";
-      linterna.style.color = "#4b3b00";
+      linterna.style.background = "#FFD84D";
+      linterna.style.color = "#171300";
+      linterna.style.border = "2px solid #FFFFFF";
+      linterna.style.boxShadow = "0 3px 12px rgba(0,0,0,.35)";
       linterna.style.padding = "11px 16px";
       linterna.style.borderRadius = "12px";
       linterna.style.fontWeight = "bold";
@@ -2150,33 +2154,69 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       linterna.onclick = async function() {
         const activo = stream || video?.srcObject;
         const track = activo?.getVideoTracks?.()[0];
-        if (!track) return;
+
+        if (!track) {
+          linterna.textContent = "🔦 SIN CÁMARA";
+          return;
+        }
 
         const encendida = linterna.dataset.on !== "1";
 
         try {
+          const caps = track.getCapabilities?.() || {};
+          const settingsAntes = track.getSettings?.() || {};
+
+          console.log("Torch capabilities:", caps);
+          console.log("Torch settings antes:", settingsAntes);
+
+          let ultimoError = null;
           let aplicado = false;
 
-          try {
-            await track.applyConstraints({ advanced: [{ torch: encendida }] });
-            aplicado = true;
-          } catch (primerError) {
-            /* Segundo intento para algunos Chrome/Android */
-            await track.applyConstraints({ torch: encendida });
-            aplicado = true;
+          const intentos = [
+            { advanced: [{ torch: encendida }] },
+            { torch: encendida },
+            { advanced: [{ torch: encendida, focusMode: "continuous" }] }
+          ];
+
+          for (const restricciones of intentos) {
+            try {
+              await track.applyConstraints(restricciones);
+              aplicado = true;
+              break;
+            } catch (err) {
+              ultimoError = err;
+            }
           }
 
-          if (!aplicado) return;
+          if (!aplicado) throw ultimoError || new Error("Torch no aceptado");
+
+          await new Promise(resolve => setTimeout(resolve, 120));
+
+          const settingsDespues = track.getSettings?.() || {};
+          console.log("Torch settings después:", settingsDespues);
+
+          /* Si el navegador informa el estado de torch, lo verificamos.
+             Si no lo informa, dejamos que el cambio visual refleje el intento aceptado. */
+          if ("torch" in settingsDespues && settingsDespues.torch !== encendida) {
+            throw new Error("El navegador aceptó la restricción, pero la linterna no cambió de estado");
+          }
+
           linterna.dataset.on = encendida ? "1" : "0";
           linterna.textContent = encendida ? "💡 LINTERNA ENCENDIDA" : "🔦 LINTERNA";
-          linterna.style.background = encendida ? "#ffe76d" : "#fff8d7";
+          linterna.style.background = encendida ? "#FFF07A" : "#FFD84D";
+          linterna.style.color = "#171300";
           vibrar(25);
+
         } catch(e) {
-          console.warn("Linterna no disponible:", e);
+          console.warn("No se pudo controlar la linterna:", e);
+          linterna.dataset.on = "0";
           linterna.textContent = "🔦 NO DISPONIBLE";
+          linterna.style.background = "#FFD84D";
+          linterna.style.color = "#171300";
+
           setTimeout(() => {
             if (!cerrado) linterna.textContent = "🔦 LINTERNA";
-          }, 1200);
+          }, 1400);
         }
       };
 
@@ -2193,25 +2233,29 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       const linterna = document.getElementById("btnLinterna");
       if (!linterna) return;
 
-      for (let intento = 0; intento < 15 && !cerrado; intento++) {
+      for (let intento = 0; intento < 18 && !cerrado; intento++) {
         const activo = stream || video?.srcObject;
         const track = activo?.getVideoTracks?.()[0];
 
         if (track) {
           try {
             const caps = track.getCapabilities?.() || {};
+            console.log("Capacidades de cámara:", caps);
 
-            /* En Android mostramos el botón y probamos torch al tocar.
-               En otros dispositivos solo si la cámara declara soporte real. */
-            if (caps.torch === true || !esIOS) {
+            if (caps.torch === true) {
               linterna.style.display = "block";
               return;
             }
-          } catch(e) {}
+          } catch(e) {
+            console.warn("No se pudieron consultar capacidades de cámara:", e);
+          }
         }
 
         await new Promise(resolve => setTimeout(resolve, 120));
       }
+
+      /* Si el navegador no anuncia soporte torch, no mostramos un botón falso. */
+      linterna.style.display = "none";
     }
 
     function detenerEscaner() {
