@@ -689,6 +689,35 @@
       color: #ffffff !important;
     }
 
+
+    /* ===== AVISO DESDE CONFIG ===== */
+    .aviso-base {
+      display: none;
+      margin: -2px 0 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff8dc;
+      border: 1px solid #e5c34d;
+      color: #6f5100;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      box-shadow: 0 2px 8px rgba(184, 134, 11, 0.12);
+    }
+
+    body[data-theme="dark"] .aviso-base {
+      background: #2b2818 !important;
+      border-color: #8f7a2e !important;
+      color: #f4df83 !important;
+    }
+
+    body[data-theme="pink"] .aviso-base {
+      background: #fff0f6 !important;
+      border-color: #e8a8c4 !important;
+      color: #8f4567 !important;
+    }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -722,6 +751,8 @@
       <strong id="ultimaActualizacion">Sin datos</strong>
     </div>
   </div>
+
+  <div id="avisoBase" class="aviso-base"></div>
 
   <div class="buscador">
 
@@ -1194,6 +1225,26 @@
 
 
   /* =========================================================
+     MOSTRAR AVISO DE LA BASE
+  ========================================================= */
+
+  function mostrarAvisoBase(texto) {
+    const aviso = document.getElementById("avisoBase");
+    if (!aviso) return;
+
+    const contenido = String(texto || "").trim();
+
+    if (contenido) {
+      aviso.textContent = "📢 " + contenido;
+      aviso.style.display = "block";
+    } else {
+      aviso.textContent = "";
+      aviso.style.display = "none";
+    }
+  }
+
+
+  /* =========================================================
      BUSCAR PRODUCTO LOCALMENTE
   ========================================================= */
 
@@ -1507,6 +1558,8 @@
 
           productos =
             data.productos;
+
+          mostrarAvisoBase(data.mensaje);
 
           construirIndice();
 
@@ -2007,6 +2060,43 @@
 
 
   /* =========================================================
+     CARGAR AVISO DESDE CONFIG
+  ========================================================= */
+
+  function cargarAvisoBase() {
+    const callbackName = "callbackAviso_" + Date.now();
+
+    window[callbackName] = function(data) {
+      try {
+        mostrarAvisoBase(data && data.mensaje);
+      } catch (error) {
+        console.error("Error mostrando aviso:", error);
+      }
+
+      const script = document.getElementById(callbackName);
+      if (script) script.remove();
+      delete window[callbackName];
+    };
+
+    const script = document.createElement("script");
+    script.id = callbackName;
+    script.src =
+      API_URL +
+      "?accion=aviso&callback=" +
+      callbackName +
+      "&t=" +
+      Date.now();
+
+    script.onerror = function() {
+      script.remove();
+      delete window[callbackName];
+    };
+
+    document.body.appendChild(script);
+  }
+
+
+  /* =========================================================
      INICIO
   ========================================================= */
 
@@ -2015,6 +2105,8 @@
     try {
 
       await abrirDB();
+
+      cargarAvisoBase();
 
       const datos =
         await cargarProductosGuardados();
