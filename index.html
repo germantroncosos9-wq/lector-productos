@@ -353,6 +353,22 @@
       font-weight: 900;
     }
 
+    /* ===== SUPER OAI ===== */
+    .oai-card.super-oai-card {
+      background: linear-gradient(135deg, #fff8dc 0%, #f6d365 100%) !important;
+      border: 2px solid #c99700 !important;
+      box-shadow: 0 4px 14px rgba(184, 134, 11, 0.24) !important;
+    }
+
+    .oai-card.super-oai-card .etiqueta,
+    .oai-card.super-oai-card .oai-valor,
+    body[data-theme="dark"] .oai-card.super-oai-card .etiqueta,
+    body[data-theme="dark"] .oai-card.super-oai-card .oai-valor,
+    body[data-theme="pink"] .oai-card.super-oai-card .etiqueta,
+    body[data-theme="pink"] .oai-card.super-oai-card .oai-valor {
+      color: #6f5100 !important;
+    }
+
     .descriptor {
       font-size: 19px;
       font-weight: bold;
@@ -771,7 +787,7 @@
       class="tarjeta oai-card oculto"
       id="oaiCard"
     >
-      <div class="etiqueta">Precio OAI</div>
+      <div class="etiqueta" id="oaiEtiqueta">Precio OAI</div>
       <div
         class="oai-valor"
         id="precioOAI"
@@ -1304,6 +1320,16 @@
         "precioOAI"
       );
 
+    const oaiEtiqueta =
+      document.getElementById(
+        "oaiEtiqueta"
+      );
+
+    const esSuperOAI =
+      String(producto["SUPER OAI"] || "")
+        .trim()
+        .toUpperCase() === "SUPER OAI";
+
 
     if (
       precioOAI !== undefined &&
@@ -1314,6 +1340,14 @@
       oaiValor.textContent =
         formatearPrecio(precioOAI);
 
+      if (esSuperOAI) {
+        oaiEtiqueta.textContent = "✨ SUPER OAI ✨";
+        oaiCard.classList.add("super-oai-card");
+      } else {
+        oaiEtiqueta.textContent = "Precio OAI";
+        oaiCard.classList.remove("super-oai-card");
+      }
+
       oaiCard.classList.remove(
         "oculto"
       );
@@ -1321,6 +1355,8 @@
     } else {
 
       oaiValor.textContent = "";
+      oaiEtiqueta.textContent = "Precio OAI";
+      oaiCard.classList.remove("super-oai-card");
 
       oaiCard.classList.add(
         "oculto"
