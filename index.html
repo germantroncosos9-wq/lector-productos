@@ -1085,6 +1085,90 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     border-color:rgba(185,79,114,.45) !important;
   }
 
+
+  /* ===== V5: AYUDA + PROGRESO DE ACTUALIZACIÓN ===== */
+  .progreso-actualizacion{
+    margin:0 0 9px;
+    padding:9px 11px;
+    border-radius:11px;
+    background:#f2f8f4;
+    font-size:11px;
+  }
+  .progreso-actualizacion.oculto{display:none}
+  .progreso-texto{text-align:center;font-weight:800;margin-bottom:6px}
+  .progreso-pista{
+    height:7px;overflow:hidden;border-radius:999px;
+    background:rgba(0,132,61,.14);
+  }
+  .progreso-barra{
+    width:28%;height:100%;border-radius:999px;background:#00843d;
+    animation:progresoIndeterminado 1.15s ease-in-out infinite;
+  }
+  .progreso-barra.procesando{width:76%;animation:none;transition:width .35s ease}
+  .progreso-barra.completo{width:100%;animation:none;transition:width .3s ease}
+  .progreso-consejo{text-align:center;opacity:.68;margin-top:5px;font-size:10px}
+  @keyframes progresoIndeterminado{
+    0%{transform:translateX(-105%)}
+    50%{transform:translateX(145%)}
+    100%{transform:translateX(360%)}
+  }
+
+  .ayuda-btn-principal{
+    width:100%;margin:4px 0;padding:10px 12px;border-radius:12px;
+    border:1px solid rgba(0,132,61,.30);background:#f4faf6;color:#08783d;
+    font-size:13px;font-weight:800;cursor:pointer;
+  }
+  .ayuda-modal{
+    display:none;position:fixed;inset:0;z-index:12000;padding:18px;
+    background:rgba(0,0,0,.58);overflow:auto;
+    align-items:flex-start;justify-content:center;
+  }
+  .ayuda-modal.abierto{display:flex}
+  .ayuda-panel{
+    width:min(100%,520px);margin:auto;background:#fff;color:#26352d;
+    border-radius:18px;padding:16px;box-shadow:0 12px 38px rgba(0,0,0,.28);
+  }
+  .ayuda-cabecera{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .ayuda-cabecera h2{margin:0;flex:1;font-size:20px}
+  .ayuda-cerrar{
+    width:36px;height:36px;border:0;border-radius:10px;background:#edf4ef;
+    color:#17633d;font-weight:900;font-size:16px;cursor:pointer;
+  }
+  .ayuda-importante,.ayuda-consejo,.ayuda-seccion{
+    border-radius:13px;padding:12px;margin-bottom:9px;
+  }
+  .ayuda-importante{background:#fff5d9;border:1px solid #f0d98c}
+  .ayuda-consejo{background:#eaf7ef;border:1px solid #b9e0c8}
+  .ayuda-seccion{background:#f5f7f6}
+  .ayuda-panel p{margin:5px 0 0;font-size:13px;line-height:1.45}
+  .ayuda-pie{text-align:center;font-size:11px;opacity:.58;margin-top:13px}
+
+  body[data-theme="dark"] .progreso-actualizacion{
+    background:#1b2420;color:#f2f7f4;
+  }
+  body[data-theme="dark"] .progreso-pista{background:rgba(46,204,113,.18)}
+  body[data-theme="dark"] .progreso-barra{background:#2ecc71}
+  body[data-theme="dark"] .ayuda-btn-principal{
+    background:#1b2420!important;color:#2ecc71!important;border-color:rgba(46,204,113,.55)!important;
+  }
+  body[data-theme="dark"] .ayuda-panel{background:#151e19;color:#f2f7f4}
+  body[data-theme="dark"] .ayuda-cerrar{background:#27342e;color:#f2f7f4}
+  body[data-theme="dark"] .ayuda-seccion{background:#1b2420}
+  body[data-theme="dark"] .ayuda-importante{background:#332f1e;border-color:#665c2d}
+  body[data-theme="dark"] .ayuda-consejo{background:#183326;border-color:#285c3d}
+
+  body[data-theme="pink"] .progreso-actualizacion{background:#fff0f5;color:#5d3340}
+  body[data-theme="pink"] .progreso-pista{background:rgba(185,79,114,.16)}
+  body[data-theme="pink"] .progreso-barra{background:#d86b8e}
+  body[data-theme="pink"] .ayuda-btn-principal{
+    background:#fff0f5!important;color:#b94f72!important;border-color:#e6a9bc!important;
+  }
+  body[data-theme="pink"] .ayuda-panel{background:#fffafb;color:#5d3340}
+  body[data-theme="pink"] .ayuda-cerrar{background:#f8dce5;color:#7d3850}
+  body[data-theme="pink"] .ayuda-seccion{background:#fff1f5}
+  body[data-theme="pink"] .ayuda-importante{background:#fff3df;border-color:#efcf9d}
+  body[data-theme="pink"] .ayuda-consejo{background:#fce7ee;border-color:#edbdcd}
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -1198,6 +1282,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
   <div class="actualizar-secundario-wrap">
     <button
+      id="btnActualizarProductos"
       class="btn-actualizar btn-actualizar-secundario"
       onclick="actualizarProductos()"
     >
@@ -1205,8 +1290,57 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     </button>
   </div>
 
+  <div id="progresoActualizacion" class="progreso-actualizacion oculto" aria-live="polite">
+    <div class="progreso-texto" id="progresoTexto">Preparando actualización…</div>
+    <div class="progreso-pista">
+      <div id="progresoBarra" class="progreso-barra"></div>
+    </div>
+    <div class="progreso-consejo">Espera un momento y no cierres la página.</div>
+  </div>
+
   <div id="avisoBase" class="aviso-base"></div>
 
+
+  <button id="btnAyuda" class="ayuda-btn-principal" type="button">❔ AYUDA</button>
+
+  <div id="ayudaModal" class="ayuda-modal" aria-hidden="true">
+    <div class="ayuda-panel" role="dialog" aria-modal="true" aria-labelledby="ayudaTitulo">
+      <div class="ayuda-cabecera">
+        <h2 id="ayudaTitulo">❔ Guía rápida</h2>
+        <button id="cerrarAyuda" class="ayuda-cerrar" type="button" aria-label="Cerrar ayuda">✕</button>
+      </div>
+
+      <div class="ayuda-importante">
+        <strong>🚨 Primera vez que usas la página</strong>
+        <p>Antes de comenzar, pulsa <b>↻ Actualizar productos</b> y espera a que termine. La primera actualización puede tardar un poco.</p>
+        <p>Mientras se actualiza verás una barra de progreso. No cierres la página hasta que aparezca la confirmación.</p>
+      </div>
+
+      <div class="ayuda-seccion">
+        <strong>📷 Escanear un producto</strong>
+        <p>Pulsa <b>ESCANEAR PRODUCTO</b>, permite el acceso a la cámara si el navegador lo solicita y apunta al código de barras.</p>
+      </div>
+
+      <div class="ayuda-seccion">
+        <strong>⌨️ Búsqueda manual</strong>
+        <p>También puedes escribir un código de barras o un código interno en el buscador.</p>
+      </div>
+
+      <div class="ayuda-seccion">
+        <strong>📋 Listas</strong>
+        <p>Puedes crear listas, agregar productos escaneándolos o escribiendo su código y modificar las cantidades cuando lo necesites.</p>
+      </div>
+
+      <div class="ayuda-consejo">
+        <strong>💡 Mantén tus productos actualizados</strong>
+        <p>Actualiza el listado cada cierto tiempo. Se irán incorporando productos nuevos y cambios en la información, por lo que una actualización periódica te permitirá tener los datos más recientes.</p>
+      </div>
+
+      <div class="ayuda-pie">
+        Creado por Germán · CV11
+      </div>
+    </div>
+  </div>
 
   <button id="btnListas" class="listas-btn-principal" type="button">📋 LISTAS</button>
 
@@ -2352,7 +2486,55 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
      ACTUALIZAR PRODUCTOS DESDE GOOGLE SHEETS
   ========================================================= */
 
+
+  function abrirAyuda(){
+    const modal=document.getElementById("ayudaModal");
+    modal.classList.add("abierto");
+    modal.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+  }
+
+  function cerrarAyuda(){
+    const modal=document.getElementById("ayudaModal");
+    modal.classList.remove("abierto");
+    modal.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+  }
+
+  document.getElementById("btnAyuda").addEventListener("click",abrirAyuda);
+  document.getElementById("cerrarAyuda").addEventListener("click",cerrarAyuda);
+  document.getElementById("ayudaModal").addEventListener("click",function(e){
+    if(e.target===this) cerrarAyuda();
+  });
+
+  function estadoProgresoActualizacion(estado,texto){
+    const caja=document.getElementById("progresoActualizacion");
+    const barra=document.getElementById("progresoBarra");
+    const txt=document.getElementById("progresoTexto");
+    if(!caja || !barra || !txt) return;
+
+    caja.classList.remove("oculto");
+    barra.className="progreso-barra";
+    if(estado==="procesando") barra.classList.add("procesando");
+    if(estado==="completo") barra.classList.add("completo");
+    txt.textContent=texto;
+  }
+
+  function terminarProgresoActualizacion(){
+    const caja=document.getElementById("progresoActualizacion");
+    setTimeout(()=>caja?.classList.add("oculto"),1300);
+  }
+
   function actualizarProductos() {
+
+    const btnActualizar = document.getElementById("btnActualizarProductos");
+    if (btnActualizar?.disabled) return;
+    if (btnActualizar) {
+      btnActualizar.disabled = true;
+      btnActualizar.textContent = "↻ Actualizando…";
+    }
+
+    estadoProgresoActualizacion("descargando","Descargando listado de productos…");
 
     const mensaje =
       document.getElementById(
@@ -2386,6 +2568,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
           }
 
+          estadoProgresoActualizacion("procesando","Procesando y guardando productos…");
+
           productos =
             data.productos;
 
@@ -2408,6 +2592,13 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
               mensaje.textContent =
                 "✅ Productos actualizados correctamente.";
 
+              estadoProgresoActualizacion("completo","✅ Actualización completada.");
+              if (btnActualizar) {
+                btnActualizar.disabled = false;
+                btnActualizar.textContent = "↻ Actualizar productos";
+              }
+              terminarProgresoActualizacion();
+
             })
             .catch(function(error) {
 
@@ -2418,6 +2609,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
               mensaje.textContent =
                 "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
+
+              if (btnActualizar) {
+                btnActualizar.disabled = false;
+                btnActualizar.textContent = "↻ Actualizar productos";
+              }
+              terminarProgresoActualizacion();
 
             });
 
@@ -2430,6 +2627,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
           mensaje.textContent =
             "❌ Error procesando los productos.";
+
+          if (btnActualizar) {
+            btnActualizar.disabled = false;
+            btnActualizar.textContent = "↻ Actualizar productos";
+          }
+          terminarProgresoActualizacion();
 
         }
 
@@ -2468,6 +2671,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
         mensaje.textContent =
           "❌ No se pudo conectar con Google Sheets.";
+
+        if (btnActualizar) {
+          btnActualizar.disabled = false;
+          btnActualizar.textContent = "↻ Actualizar productos";
+        }
+        terminarProgresoActualizacion();
 
         script.remove();
 
