@@ -1004,6 +1004,87 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     box-shadow:0 3px 10px rgba(122,65,84,.10) !important;
   }
 
+
+  /* ===== V4: JERARQUÍA DE ACCIONES ===== */
+  .botones-principal{
+    display:block !important;
+    margin-top:8px !important;
+  }
+
+  .botones-principal .btn-escanear{
+    width:100% !important;
+    min-height:50px;
+    background:var(--verde) !important;
+    color:#fff !important;
+    border:2px solid var(--verde) !important;
+    font-size:15px !important;
+    font-weight:900 !important;
+    box-shadow:0 4px 12px rgba(0,132,61,.18);
+  }
+
+  .actualizar-secundario-wrap{
+    display:flex;
+    justify-content:center;
+    margin:-1px 0 8px;
+  }
+
+  .btn-actualizar-secundario{
+    flex:none !important;
+    width:auto !important;
+    padding:7px 12px !important;
+    font-size:11px !important;
+    font-weight:700 !important;
+    border-radius:9px !important;
+    background:transparent !important;
+    color:var(--verde) !important;
+    border:1px solid rgba(0,132,61,.38) !important;
+    box-shadow:none !important;
+  }
+
+  /* Descriptor: mismo ancho que las demás tarjetas, pero más fino verticalmente */
+  .descriptor-card{
+    width:100% !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+    box-sizing:border-box;
+    padding-top:8px !important;
+    padding-bottom:8px !important;
+  }
+
+  .descriptor-card .etiqueta{
+    margin-bottom:2px !important;
+  }
+
+  .descriptor-card .descriptor{
+    line-height:1.2 !important;
+  }
+
+  body[data-theme="dark"] .botones-principal .btn-escanear{
+    background:#2ecc71 !important;
+    color:#fff !important;
+    border-color:#2ecc71 !important;
+    box-shadow:0 4px 14px rgba(0,0,0,.25) !important;
+  }
+
+  body[data-theme="dark"] .btn-actualizar-secundario{
+    background:transparent !important;
+    color:#2ecc71 !important;
+    border-color:rgba(46,204,113,.55) !important;
+  }
+
+  body[data-theme="pink"] .botones-principal .btn-escanear{
+    background:#d86b8e !important;
+    color:#fff !important;
+    border-color:#d86b8e !important;
+    box-shadow:0 4px 12px rgba(185,79,114,.18) !important;
+  }
+
+  body[data-theme="pink"] .btn-actualizar-secundario{
+    background:transparent !important;
+    color:#b94f72 !important;
+    border-color:rgba(185,79,114,.45) !important;
+  }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -1035,22 +1116,13 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       inputmode="numeric"
     >
 
-    <div class="botones">
-
-      <button
-        class="btn-actualizar"
-        onclick="actualizarProductos()"
-      >
-        🔄 ACTUALIZAR PRODUCTOS
-      </button>
-
+    <div class="botones botones-principal">
       <button
         class="btn-escanear"
         onclick="iniciarEscaner()"
       >
-        📷 ESCANEAR
+        📷 ESCANEAR PRODUCTO
       </button>
-
     </div>
 
   </div>
@@ -1122,6 +1194,15 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       Última actualización:
       <strong id="ultimaActualizacion">Sin datos</strong>
     </div>
+  </div>
+
+  <div class="actualizar-secundario-wrap">
+    <button
+      class="btn-actualizar btn-actualizar-secundario"
+      onclick="actualizarProductos()"
+    >
+      ↻ Actualizar productos
+    </button>
   </div>
 
   <div id="avisoBase" class="aviso-base"></div>
