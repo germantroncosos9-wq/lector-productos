@@ -1216,6 +1216,56 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     flex:0 0 36px !important;
   }
 
+
+  /* ===== V5.5: BÚSQUEDA POR DESCRIPTOR ===== */
+  .resultados-descriptor{
+    margin:0 0 9px;border-radius:14px;overflow:hidden;
+    background:#fff;border:1px solid rgba(0,132,61,.18);
+    box-shadow:0 3px 10px rgba(0,0,0,.06);
+  }
+  .resultados-descriptor.oculto{display:none}
+  .descriptor-resumen{
+    padding:8px 11px;background:#f0f8f3;color:#17633d;
+    font-size:11px;font-weight:800;
+  }
+  .descriptor-opcion{
+    width:100%;display:flex;align-items:center;gap:10px;
+    padding:10px 11px;border:0;border-top:1px solid rgba(0,0,0,.07);
+    background:transparent;color:inherit;text-align:left;cursor:pointer;
+  }
+  .descriptor-opcion-info{flex:1;min-width:0}
+  .descriptor-opcion-nombre{display:block;font-size:13px;font-weight:800;line-height:1.25}
+  .descriptor-opcion-codigo{display:block;margin-top:3px;font-size:10px;opacity:.62}
+  .descriptor-opcion-precio{flex:0 0 auto;font-size:12px;font-weight:900;color:#08783d}
+  .descriptor-vacio{padding:11px;text-align:center;font-size:12px;opacity:.7}
+
+  /* ===== V5.5: AVISO DE LISTADO ANTIGUO ===== */
+  .aviso-listado-antiguo{
+    margin:0 0 8px;padding:9px 11px;border-radius:11px;
+    background:#fff6dd;border:1px solid #ecd48d;font-size:11px;line-height:1.35;
+  }
+  .aviso-listado-antiguo.oculto{display:none}
+  .aviso-listado-antiguo strong{display:block;margin-bottom:2px}
+  .aviso-listado-antiguo span{opacity:.78}
+
+  body[data-theme="dark"] .resultados-descriptor{
+    background:#1b2420;border-color:#405249;color:#f2f7f4;
+  }
+  body[data-theme="dark"] .descriptor-resumen{background:#183326;color:#2ecc71}
+  body[data-theme="dark"] .descriptor-opcion{border-color:rgba(255,255,255,.08)}
+  body[data-theme="dark"] .descriptor-opcion-precio{color:#2ecc71}
+  body[data-theme="dark"] .aviso-listado-antiguo{
+    background:#332f1e;border-color:#665c2d;color:#f2f7f4;
+  }
+  body[data-theme="pink"] .resultados-descriptor{
+    background:#fffafb;border-color:#edbdcd;color:#5d3340;
+  }
+  body[data-theme="pink"] .descriptor-resumen{background:#fce7ee;color:#b94f72}
+  body[data-theme="pink"] .descriptor-opcion-precio{color:#b94f72}
+  body[data-theme="pink"] .aviso-listado-antiguo{
+    background:#fff3df;border-color:#efcf9d;color:#5d3340;
+  }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -1235,16 +1285,16 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
     <div class="app-intro">
       <h2>Lector de Productos</h2>
-      <p>Escanea o ingresa un código de barras</p>
+      <p>Escanea o busca un producto</p>
     </div>
   <div class="buscador">
 
     <input
       type="text"
       id="codigoInput"
-      placeholder="Escanea o escribe un código"
+      placeholder="Código, interno o nombre del producto"
       autocomplete="off"
-      inputmode="numeric"
+      inputmode="search"
     >
 
     <div class="botones botones-principal">
@@ -1261,6 +1311,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   <div id="mensaje" class="mensaje">
     Escanea o escribe un código de barras.
   </div>
+
+  <div id="resultadosDescriptor" class="resultados-descriptor oculto"></div>
 
   <div id="resultado" class="resultado">
 
@@ -1325,6 +1377,11 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       Última actualización:
       <strong id="ultimaActualizacion">Sin datos</strong>
     </div>
+  </div>
+
+  <div id="avisoListadoAntiguo" class="aviso-listado-antiguo oculto">
+    <strong>💡 Quizás sea momento de actualizar tus productos</strong>
+    <span>Tu listado lleva 14 días o más sin actualizarse. Pueden existir productos nuevos o cambios en la información.</span>
   </div>
 
   <div class="actualizar-secundario-wrap">
@@ -2162,7 +2219,29 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
      MOSTRAR FECHA
   ========================================================= */
 
+
+  function revisarAntiguedadListado(fecha) {
+    const aviso = document.getElementById("avisoListadoAntiguo");
+    if (!aviso) return;
+
+    if (!fecha) {
+      aviso.classList.add("oculto");
+      return;
+    }
+
+    const fechaObj = new Date(fecha);
+    if (Number.isNaN(fechaObj.getTime())) {
+      aviso.classList.add("oculto");
+      return;
+    }
+
+    const dias = (Date.now() - fechaObj.getTime()) / 86400000;
+    aviso.classList.toggle("oculto", dias < 14);
+  }
+
   function mostrarFecha(fecha) {
+
+    revisarAntiguedadListado(fecha);
 
     if (!fecha) {
 
@@ -2239,6 +2318,91 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   /* =========================================================
      BUSCAR PRODUCTO LOCALMENTE
   ========================================================= */
+
+
+  function normalizarTextoBusqueda(texto) {
+    return String(texto || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  function ocultarResultadosDescriptor() {
+    const caja = document.getElementById("resultadosDescriptor");
+    if (!caja) return;
+    caja.innerHTML = "";
+    caja.classList.add("oculto");
+  }
+
+  function buscarPorDescriptor(consulta) {
+    const caja = document.getElementById("resultadosDescriptor");
+    if (!caja) return;
+
+    const q = normalizarTextoBusqueda(consulta);
+    if (q.length < 3) {
+      ocultarResultadosDescriptor();
+      return;
+    }
+
+    const palabras = q.split(/\s+/).filter(Boolean);
+    const coincidencias = [];
+
+    for (const p of productos) {
+      const descriptor = normalizarTextoBusqueda(p["DESCRIPTOR"]);
+      if (descriptor && palabras.every(palabra => descriptor.includes(palabra))) {
+        coincidencias.push(p);
+        if (coincidencias.length >= 20) break;
+      }
+    }
+
+    caja.innerHTML = "";
+    caja.classList.remove("oculto");
+
+    if (!coincidencias.length) {
+      caja.innerHTML = '<div class="descriptor-vacio">No se encontraron productos con ese nombre.</div>';
+      return;
+    }
+
+    const resumen = document.createElement("div");
+    resumen.className = "descriptor-resumen";
+    resumen.textContent = coincidencias.length === 20
+      ? "Primeras 20 coincidencias"
+      : coincidencias.length + " coincidencia" + (coincidencias.length === 1 ? "" : "s");
+    caja.appendChild(resumen);
+
+    coincidencias.forEach(producto => {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "descriptor-opcion";
+
+      const info = document.createElement("span");
+      info.className = "descriptor-opcion-info";
+
+      const nombre = document.createElement("span");
+      nombre.className = "descriptor-opcion-nombre";
+      nombre.textContent = producto["DESCRIPTOR"] || "Sin descriptor";
+
+      const codigo = document.createElement("span");
+      codigo.className = "descriptor-opcion-codigo";
+      codigo.textContent = "Código interno: " + (producto["CODIGO INTERNO"] || "—");
+
+      const precio = document.createElement("span");
+      precio.className = "descriptor-opcion-precio";
+      precio.textContent = formatearPrecio(producto["PRECIO"]);
+
+      info.append(nombre, codigo);
+      boton.append(info, precio);
+
+      boton.addEventListener("click", () => {
+        document.getElementById("codigoInput").value = producto["DESCRIPTOR"] || "";
+        ocultarResultadosDescriptor();
+        mostrarProducto(producto, 0);
+      });
+
+      caja.appendChild(boton);
+    });
+  }
 
   function buscarProductoLocal(codigo) {
 
@@ -2760,11 +2924,15 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
           event.preventDefault();
 
-          buscarProductoLocal(
-            this.value
-          );
+          const valor = this.value.trim();
 
-          this.select();
+          if (/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(valor)) {
+            buscarPorDescriptor(valor);
+          } else {
+            ocultarResultadosDescriptor();
+            buscarProductoLocal(valor);
+            this.select();
+          }
 
         }
 
@@ -2799,6 +2967,14 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         }
 
         ultimoValor = valor;
+
+        /* Si hay letras, buscamos por nombre/descriptor desde 3 caracteres. */
+        if (/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(valor)) {
+          buscarPorDescriptor(valor);
+          return;
+        } else {
+          ocultarResultadosDescriptor();
+        }
 
         /*
           Los códigos de barra normalmente
