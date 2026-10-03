@@ -2932,16 +2932,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       const texto = document.createElement("div");
       texto.textContent = "Apunta la cámara al código de barras";
 
-      const enfoqueAyuda = document.createElement("div");
-      enfoqueAyuda.textContent = "Toca la pantalla para reenfocar";
-      enfoqueAyuda.style.position = "absolute";
-      enfoqueAyuda.style.top = "48px";
-      enfoqueAyuda.style.left = "20px";
-      enfoqueAyuda.style.right = "20px";
-      enfoqueAyuda.style.color = "rgba(255,255,255,.82)";
-      enfoqueAyuda.style.textAlign = "center";
-      enfoqueAyuda.style.fontSize = "12px";
-      enfoqueAyuda.style.textShadow = "0 2px 4px rgba(0,0,0,0.8)";
       texto.style.position = "absolute";
       texto.style.top = "20px";
       texto.style.left = "20px";
@@ -3058,7 +3048,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       overlay.appendChild(video);
       overlay.appendChild(marco);
       overlay.appendChild(texto);
-      overlay.appendChild(enfoqueAyuda);
       overlay.appendChild(linterna);
       overlay.appendChild(cerrar);
       document.body.appendChild(overlay);
@@ -3094,70 +3083,33 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       linterna.style.display = "none";
     }
 
-    function configurarToqueEnfoque() {
+    async function activarAutofocusContinuo() {
+      if (cerrado) return;
 
-      if (!video) return;
+      const activo = stream || video?.srcObject;
+      const track = activo?.getVideoTracks?.()[0];
+      if (!track) return;
 
-      const enfocar = async function(event) {
-        if (cerrado) return;
+      try {
+        const caps = track.getCapabilities?.() || {};
+        const modos = Array.isArray(caps.focusMode) ? caps.focusMode : [];
 
-        /* No interferir con CERRAR ni LINTERNA. */
-        if (event.target && event.target.closest && event.target.closest("button")) {
-          return;
+        /*
+          Preferimos autofocus continuo para lectura de códigos.
+          Si el navegador no expone focusMode, dejamos que la cámara
+          utilice su autofocus automático nativo.
+        */
+        if (modos.includes("continuous")) {
+          await track.applyConstraints({
+            advanced: [{ focusMode: "continuous" }]
+          });
+          console.log("Autofocus continuo activado.");
+        } else {
+          console.log("El navegador no expone control de autofocus; se usa el autofocus nativo.");
         }
-
-        const activo = stream || video.srcObject;
-        const track = activo?.getVideoTracks?.()[0];
-        if (!track) return;
-
-        try {
-          const caps = track.getCapabilities?.() || {};
-          const modos = Array.isArray(caps.focusMode) ? caps.focusMode : [];
-
-          if (!modos.length) {
-            return;
-          }
-
-          /*
-            Los navegadores no exponen de forma universal un punto de enfoque
-            por coordenadas. Lo que sí podemos hacer es forzar un nuevo enfoque
-            en la zona que el sistema de cámara considere prioritaria y después
-            devolverla a enfoque continuo.
-          */
-          if (modos.includes("single-shot")) {
-            await track.applyConstraints({
-              advanced: [{ focusMode: "single-shot" }]
-            });
-
-            setTimeout(async function() {
-              if (cerrado) return;
-
-              try {
-                if (modos.includes("continuous")) {
-                  await track.applyConstraints({
-                    advanced: [{ focusMode: "continuous" }]
-                  });
-                }
-              } catch (e) {
-                console.warn("No se pudo volver a enfoque continuo:", e);
-              }
-            }, 450);
-
-            return;
-          }
-
-          if (modos.includes("continuous")) {
-            await track.applyConstraints({
-              advanced: [{ focusMode: "continuous" }]
-            });
-          }
-
-        } catch (e) {
-          console.warn("No se pudo reenfocar la cámara:", e);
-        }
-      };
-
-      video.addEventListener("pointerup", enfocar);
+      } catch (e) {
+        console.warn("No se pudo configurar autofocus continuo; se mantiene el autofocus nativo:", e);
+      }
     }
 
 
@@ -3275,6 +3227,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
             }
           );
 
+        await activarAutofocusContinuo();
         await detectarLinterna();
         configurarToqueEnfoque();
         return;
@@ -3319,6 +3272,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         video.srcObject = stream;
         await video.play();
 
+        await activarAutofocusContinuo();
         await detectarLinterna();
         configurarToqueEnfoque();
 
@@ -3391,6 +3345,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
           }
         );
+
+      await activarAutofocusContinuo();
+      await detectarLinterna();
 
       configurarToqueEnfoque();
 
