@@ -22,7 +22,12 @@
     }[c]));
   }
 
-  function buscarProductoParaLista(codigo){
+  /*
+    Búsqueda de producto compartida por la búsqueda principal
+    (buscarProductoLocal) y por las listas (agregarCodigoALista).
+    Devuelve el producto o null, sin efectos secundarios.
+  */
+  function buscarProducto(codigo){
     const normal = normalizarCodigo(codigo);
     let p = indice[normal];
     if(!p){
@@ -157,7 +162,7 @@
     const l = listaActiva();
     if(!l) return;
     const msg = document.getElementById("listaMsg");
-    const p = buscarProductoParaLista(codigo);
+    const p = buscarProducto(codigo);
     if(!p){
       msg.textContent = "❌ Producto no encontrado";
       sonidoError(); vibrar([90,60,90]);
@@ -831,36 +836,9 @@
     const inicio =
       performance.now();
 
-    const codigoNormalizado =
-      normalizarCodigo(codigo);
-
-    /*
-      Primero buscamos el código EXACTO.
-      Si no existe, buscamos la versión canónica
-      sin ceros iniciales innecesarios.
-    */
-
-    let producto =
-      indice[codigoNormalizado];
-
-    /* También permite buscar directamente por CÓDIGO INTERNO */
-    if (!producto) {
-      producto = productos.find(p =>
-        String(p["CODIGO INTERNO"] || "").trim() === String(codigo).trim()
-      );
-    }
-
-    if (!producto) {
-
-      const canonico =
-        codigoCanonico(codigoNormalizado);
-
-      if (canonico) {
-        producto =
-          indice[canonico];
-      }
-
-    }
+    /* Búsqueda compartida con las listas (ver buscarProducto). */
+    const producto =
+      buscarProducto(codigo);
 
     const tiempo =
       Math.round(
@@ -969,12 +947,14 @@
         .trim()
         .toUpperCase() === "SUPER OAI";
 
-
-    if (
+    /* ¿El producto trae un precio OAI utilizable? */
+    const tieneOAI =
       precioOAI !== undefined &&
       precioOAI !== null &&
-      String(precioOAI).trim() !== ""
-    ) {
+      String(precioOAI).trim() !== "";
+
+
+    if (tieneOAI) {
 
       oaiValor.textContent =
         formatearPrecio(precioOAI);
@@ -1005,13 +985,11 @@
 
 
     /* Sonido del resultado: solo uno según el tipo de producto */
-    if (esSuperOAI && precioOAI !== undefined && precioOAI !== null &&
-        String(precioOAI).trim() !== "") {
+    if (esSuperOAI && tieneOAI) {
       sonidoSuperOAI();
       vibrar([45,35,45,35,90]);
       animarSuperOAI();
-    } else if (precioOAI !== undefined && precioOAI !== null &&
-               String(precioOAI).trim() !== "") {
+    } else if (tieneOAI) {
       sonidoOAI();
       vibrar([45,40,75]);
     } else {
