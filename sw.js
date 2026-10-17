@@ -1,10 +1,43 @@
-const CACHE_NAME = "lector-productos-v2";
+const CACHE_NAME = "lector-productos-v8";
 
+/* Recursos propios que precargamos al instalar el service worker. */
 const ARCHIVOS = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./css/styles.css",
+  "./js/app.js",
+  "./manifest.json",
+  "./img/banner-cruz-verde.png",
+  "./img/icon-192.png",
+  "./img/icon-512.png",
+  "./img/icon-maskable-512.png",
+  "./img/apple-touch-icon.png",
+  "./vendor/zxing-browser.min.js"
 ];
+
+/*
+  Hosts que NO deben cachearse:
+  - La API de Google Sheets (respuesta dinámica): cachearla serviría
+    datos viejos al pulsar "Actualizar productos".
+*/
+const HOSTS_SIN_CACHE = [
+  "script.google.com",
+  "googleusercontent.com"
+];
+
+function esPeticionNavegacion(request, url) {
+  return (
+    request.mode === "navigate" ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith("/index.html")
+  );
+}
+
+function estaExcluido(url) {
+  return HOSTS_SIN_CACHE.some(
+    host => url.hostname === host || url.hostname.endsWith("." + host)
+  );
+}
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -32,15 +65,25 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   const request = event.request;
+
+  /* Solo gestionamos peticiones GET. */
+  if (request.method !== "GET") {
+    return;
+  }
+
   const url = new URL(request.url);
 
-  // Para la página principal e index.html:
-  // primero intenta descargar la versión nueva.
-  if (
-    request.mode === "navigate" ||
-    url.pathname.endsWith("/") ||
-    url.pathname.endsWith("/index.html")
-  ) {
+  /* Analítica y API dinámica: dejamos que vayan directo a la red. */
+  if (estaExcluido(url)) {
+    return;
+  }
+
+  /*
+    Página principal e index.html:
+    primero intenta descargar la versión nueva (network-first),
+    y si no hay conexión sirve la copia en caché.
+  */
+  if (esPeticionNavegacion(request, url)) {
     event.respondWith(
       fetch(request)
         .then(response => {
@@ -57,12 +100,28 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Para el resto de archivos:
-  // usar caché si existe, si no descargar.
+  /*
+    Resto de recursos (banner, manifest, iconos y la librería ZXing
+    alojada en vendor/): cache-first, guardando en caché lo que se
+    descargue para poder reutilizarlo sin conexión.
+  */
   event.respondWith(
     caches.match(request)
       .then(response => {
-        return response || fetch(request);
+        if (response) {
+          return response;
+        }
+
+        return fetch(request).then(nueva => {
+          if (nueva && (nueva.ok || nueva.type === "opaque")) {
+            const copia = nueva.clone();
+
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put(request, copia));
+          }
+
+          return nueva;
+        });
       })
   );
 });
