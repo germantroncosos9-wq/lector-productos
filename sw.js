@@ -4,7 +4,7 @@ const CACHE_NAME = "lector-productos-v7";
 const ARCHIVOS = [
   "./",
   "./index.html",
-  "./styles.css",
+  "./css/styles.css",
   "./app.js",
   "./manifest.json",
   "./img/banner-cruz-verde.png",

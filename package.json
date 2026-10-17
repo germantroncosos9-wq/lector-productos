@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "npm run lint:js && npm run lint:css",
     "lint:js": "eslint app.js sw.js",
-    "lint:css": "stylelint \"styles.css\""
+    "lint:css": "stylelint \"css/styles.css\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
