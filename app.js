@@ -26,6 +26,7 @@
   const STORE_NAME = "productos";
   let productos = [];
   let indice = {};
+  let indiceInterno = {};
   let db = null;
 
   /* Preferencias del usuario (claves de localStorage y valores). */
@@ -88,9 +89,12 @@
     const normal = normalizarCodigo(codigo);
     let p = indice[normal];
     if(!p){
-      p = productos.find(x =>
-        String(x["CODIGO INTERNO"] || "").trim() === String(codigo).trim()
-      );
+      /*
+        Código interno: se resuelve con el índice (indiceInterno) en
+        lugar de recorrer toda la base con un `find` lineal. Ver
+        construirIndice().
+      */
+      p = indiceInterno[String(codigo).trim()];
     }
     if(!p){
       const canon = codigoCanonico(normal);
@@ -660,9 +664,11 @@
 
 
   /* =========================================================
-     CONSTRUIR ÍNDICE DE CÓDIGOS DE BARRA
+     CONSTRUIR ÍNDICES DE BÚSQUEDA
 
-     Se guardan DOS formas del código:
+     - `indiceInterno`: "CODIGO INTERNO" -> producto (búsqueda manual).
+     - `indice`: códigos de barras -> producto. Se guardan DOS formas
+       del código:
 
      1. El código tal como aparece en el archivo.
      2. El mismo código sin ceros iniciales innecesarios.
@@ -688,10 +694,24 @@
   function construirIndice() {
 
     indice = {};
+    indiceInterno = {};
 
     for (let i = 0; i < productos.length; i++) {
 
       const producto = productos[i];
+
+      /*
+        Código interno: clave de la búsqueda manual. Se indexa para
+        TODOS los productos (tengan o no código de barras). Si hubiera
+        duplicados, se conserva el primero, igual que hacía el `find`
+        anterior.
+      */
+      const interno =
+        String(producto["CODIGO INTERNO"] || "").trim();
+
+      if (interno && !indiceInterno[interno]) {
+        indiceInterno[interno] = producto;
+      }
 
       const barras =
         String(producto["BARRAS"] || "");
