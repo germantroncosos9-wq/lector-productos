@@ -101,9 +101,9 @@ self.addEventListener("fetch", event => {
   }
 
   /*
-    Resto de recursos (banner, manifest y el CDN de ZXing):
-    cache-first, guardando en caché lo que se descargue para
-    poder reutilizarlo sin conexión.
+    Resto de recursos (banner, manifest, iconos y la librería ZXing
+    alojada en vendor/): cache-first, guardando en caché lo que se
+    descargue para poder reutilizarlo sin conexión.
   */
   event.respondWith(
     caches.match(request)
