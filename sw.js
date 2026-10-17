@@ -1,11 +1,15 @@
-const CACHE_NAME = "lector-productos-v3";
+const CACHE_NAME = "lector-productos-v4";
 
 /* Recursos propios que precargamos al instalar el service worker. */
 const ARCHIVOS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./banner-cruz-verde.png"
+  "./banner-cruz-verde.png",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-maskable-512.png",
+  "./apple-touch-icon.png"
 ];
 
 /*
