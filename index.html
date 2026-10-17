@@ -2623,55 +2623,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     setTimeout(()=>caja?.classList.add("oculto"),1300);
   }
 
-  function actualizarProductos() {
+  async function actualizarProductos() {
 
     const btnActualizar = document.getElementById("btnActualizarProductos");
     if (btnActualizar?.disabled) return;
 
     const mensaje = document.getElementById("mensaje");
-    const callbackName = "callbackProductos_" + Date.now();
-
-    /*
-      Control de estado para que la actualización termine SIEMPRE
-      por un único camino (callback, onerror o timeout) y el botón
-      nunca quede bloqueado.
-    */
-    let finalizado = false;
-    let temporizador = null;
-    let script = null;
 
     function restaurarBoton() {
       if (btnActualizar) {
         btnActualizar.disabled = false;
         btnActualizar.textContent = "↻ Actualizar productos";
       }
-    }
-
-    function limpiarRecursos() {
-      if (temporizador) {
-        clearTimeout(temporizador);
-        temporizador = null;
-      }
-
-      if (script) {
-        script.remove();
-        script = null;
-      } else {
-        const existente = document.getElementById(callbackName);
-        if (existente) existente.remove();
-      }
-
-      delete window[callbackName];
-    }
-
-    function finalizarConError(texto) {
-      if (finalizado) return;
-      finalizado = true;
-      limpiarRecursos();
-      restaurarBoton();
-      mensaje.className = "mensaje error";
-      mensaje.textContent = texto;
-      terminarProgresoActualizacion();
     }
 
     if (btnActualizar) {
@@ -2684,139 +2647,112 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     mensaje.className = "mensaje cargando";
     mensaje.textContent = "⏳ Actualizando productos...";
 
-    window[callbackName] =
-      function(data) {
-
-        if (finalizado) return;
-        finalizado = true;
-        limpiarRecursos();
-
-        try {
-
-          if (
-            !data ||
-            !Array.isArray(data.productos)
-          ) {
-
-            throw new Error(
-              "Respuesta inválida"
-            );
-
-          }
-
-          estadoProgresoActualizacion("procesando","Procesando y guardando productos…");
-
-          productos =
-            data.productos;
-
-          mostrarAvisoBase(data.mensaje);
-
-          construirIndice();
-
-          mostrarCantidad();
-
-          /*
-            Fecha de actualización: preferimos la que entregue el
-            servidor. Si la respuesta no la incluye, usamos la del
-            dispositivo como respaldo.
-          */
-          const fechaServidor =
-            data.fecha ||
-            data.FECHA ||
-            data.fechaActualizacion ||
-            data.actualizado;
-
-          guardarProductos()
-            .then(function() {
-
-              mostrarFecha(
-                fechaServidor || new Date().toISOString()
-              );
-
-              mensaje.className =
-                "mensaje";
-
-              mensaje.textContent =
-                "✅ Productos actualizados correctamente.";
-
-              estadoProgresoActualizacion("completo","✅ Actualización completada.");
-              restaurarBoton();
-              terminarProgresoActualizacion();
-
-            })
-            .catch(function(error) {
-
-              console.error(error);
-
-              mensaje.className =
-                "mensaje error";
-
-              mensaje.textContent =
-                "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
-
-              restaurarBoton();
-              terminarProgresoActualizacion();
-
-            });
-
-        } catch (error) {
-
-          console.error(error);
-
-          mensaje.className =
-            "mensaje error";
-
-          mensaje.textContent =
-            "❌ Error procesando los productos.";
-
-          restaurarBoton();
-          terminarProgresoActualizacion();
-
-        }
-
-      };
-
-
-    script =
-      document.createElement("script");
-
-    script.id =
-      callbackName;
-
-    script.src =
-      API_URL +
-      "?accion=productos&callback=" +
-      callbackName +
-      "&t=" +
-      Date.now();
-
-    script.onerror =
-      function() {
-
-        finalizarConError(
-          "❌ No se pudo conectar con Google Sheets."
-        );
-
-      };
-
     /*
-      Red de seguridad: si la API no responde ni dispara el callback
-      ni el onerror, abortamos para no dejar el botón bloqueado.
+      Migrado de JSONP a fetch: ya no se inyecta un <script> de un
+      tercero. La API de Apps Script responde con
+      "Access-Control-Allow-Origin: *", así que el navegador puede
+      leer el JSON directamente. AbortController aplica el timeout y
+      el bloque finally garantiza que el botón siempre se restaure.
     */
-    temporizador =
-      setTimeout(
-        function() {
+    const controlador = new AbortController();
 
-          finalizarConError(
-            "⌛ La actualización tardó demasiado. Revisa tu conexión e inténtalo de nuevo."
-          );
+    const temporizador = setTimeout(
+      function() {
+        controlador.abort();
+      },
+      TIEMPO_MAX_ACTUALIZACION_MS
+    );
 
-        },
-        TIEMPO_MAX_ACTUALIZACION_MS
+    try {
+
+      const respuesta = await fetch(
+        API_URL + "?accion=productos",
+        {
+          cache: "no-store",
+          signal: controlador.signal
+        }
       );
 
+      if (!respuesta.ok) {
+        const err = new Error("HTTP " + respuesta.status);
+        err.tipo = "red";
+        throw err;
+      }
 
-    document.body.appendChild(script);
+      const data = await respuesta.json();
+
+      if (!data || !Array.isArray(data.productos)) {
+        const err = new Error("Respuesta inválida");
+        err.tipo = "respuesta";
+        throw err;
+      }
+
+      estadoProgresoActualizacion("procesando", "Procesando y guardando productos…");
+
+      productos = data.productos;
+
+      mostrarAvisoBase(data.mensaje);
+
+      construirIndice();
+
+      mostrarCantidad();
+
+      /*
+        Fecha de actualización: preferimos la que entregue el servidor.
+        Si la respuesta no la incluye, usamos la del dispositivo como
+        respaldo.
+      */
+      const fechaServidor =
+        data.fecha ||
+        data.FECHA ||
+        data.fechaActualizacion ||
+        data.actualizado;
+
+      try {
+
+        await guardarProductos();
+
+        mostrarFecha(fechaServidor || new Date().toISOString());
+
+        mensaje.className = "mensaje";
+        mensaje.textContent = "✅ Productos actualizados correctamente.";
+
+        estadoProgresoActualizacion("completo", "✅ Actualización completada.");
+
+      } catch (error) {
+
+        console.error(error);
+
+        mensaje.className = "mensaje error";
+        mensaje.textContent =
+          "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+      mensaje.className = "mensaje error";
+
+      if (error && error.name === "AbortError") {
+        mensaje.textContent =
+          "⌛ La actualización tardó demasiado. Revisa tu conexión e inténtalo de nuevo.";
+      } else if (error && error.tipo === "respuesta") {
+        mensaje.textContent =
+          "❌ Error procesando los productos.";
+      } else {
+        mensaje.textContent =
+          "❌ No se pudo conectar con Google Sheets.";
+      }
+
+    } finally {
+
+      clearTimeout(temporizador);
+      restaurarBoton();
+      terminarProgresoActualizacion();
+
+    }
 
   }
 
@@ -3399,36 +3335,22 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
      CARGAR AVISO DESDE CONFIG
   ========================================================= */
 
-  function cargarAvisoBase() {
-    const callbackName = "callbackAviso_" + Date.now();
+  async function cargarAvisoBase() {
+    try {
+      const respuesta = await fetch(
+        API_URL + "?accion=aviso",
+        { cache: "no-store" }
+      );
 
-    window[callbackName] = function(data) {
-      try {
-        mostrarAvisoBase(data && data.mensaje);
-      } catch (error) {
-        console.error("Error mostrando aviso:", error);
-      }
+      if (!respuesta.ok) return;
 
-      const script = document.getElementById(callbackName);
-      if (script) script.remove();
-      delete window[callbackName];
-    };
+      const data = await respuesta.json();
 
-    const script = document.createElement("script");
-    script.id = callbackName;
-    script.src =
-      API_URL +
-      "?accion=aviso&callback=" +
-      callbackName +
-      "&t=" +
-      Date.now();
+      mostrarAvisoBase(data && data.mensaje);
 
-    script.onerror = function() {
-      script.remove();
-      delete window[callbackName];
-    };
-
-    document.body.appendChild(script);
+    } catch (error) {
+      /* Sin conexión o error: se conserva el aviso guardado localmente. */
+    }
   }
 
 
