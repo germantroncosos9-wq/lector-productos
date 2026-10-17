@@ -1,3 +1,9 @@
+  /*
+    `actualizarProductos` se invoca desde el HTML (onclick del botón
+    "Actualizar productos"), por eso ESLint no ve su uso aquí.
+  */
+  /* exported actualizarProductos */
+
   /* =========================================================
      ESTADO GLOBAL Y CONFIGURACIÓN
      Todo el estado mutable de la aplicación, en un único lugar.

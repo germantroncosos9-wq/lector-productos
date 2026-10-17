@@ -1,0 +1,18 @@
+{
+  "name": "lector-productos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PWA para escanear códigos de barras y consultar productos desde una base en Google Sheets.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:js": "eslint app.js sw.js",
+    "lint:css": "stylelint \"styles.css\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "stylelint": "^17.16.0"
+  }
+}
