@@ -1,0 +1,37 @@
+Licencia propietaria — Todos los derechos reservados
+=====================================================
+
+Copyright (c) 2026 Germán Troncoso S. (CV11)
+Todos los derechos reservados / All rights reserved.
+
+Este software ("Lector de Productos"), incluido su código fuente, su
+diseño y su documentación, es propiedad de su autor. No se concede
+ninguna licencia, expresa ni implícita, sobre él.
+
+Queda prohibido, sin autorización previa y por escrito del autor:
+
+  - copiar, reproducir o distribuir el software o partes de él;
+  - modificarlo, adaptarlo o crear obras derivadas;
+  - utilizarlo con fines comerciales o integrarlo en otro producto;
+  - publicarlo o ponerlo a disposición de terceros.
+
+El acceso al código en un repositorio público es únicamente a efectos de
+consulta y no implica cesión alguna de derechos.
+
+El uso de la aplicación a través de su sitio publicado está permitido a
+los usuarios autorizados por el autor.
+
+------------------------------------------------------------------------
+Componentes de terceros
+
+Este proyecto incluye la librería ZXing (@zxing/browser, versión 0.1.5)
+en `vendor/zxing-browser.min.js`, que se distribuye bajo su propia
+licencia MIT. Dicha licencia se conserva en
+`vendor/LICENSE-zxing-browser.txt` y no queda cubierta por la presente.
+
+------------------------------------------------------------------------
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO,
+EXPRESA O IMPLÍCITA. EN NINGÚN CASO EL AUTOR SERÁ RESPONSABLE DE DAÑOS
+DERIVADOS DEL USO DEL SOFTWARE.
+
+Para permisos o consultas: GermanTroncosoS9@Gmail.Com
