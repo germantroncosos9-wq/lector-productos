@@ -2972,6 +2972,14 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
   let ultimoValor = "";
 
+  /*
+    Marca de tiempo en la que empezó a escribirse el valor actual.
+    Se usa para distinguir una entrada "de lector" (rápida, casi instantánea)
+    de una escritura manual con el teclado, y así no seleccionar el texto
+    mientras la persona escribe.
+  */
+  let inicioEscritura = 0;
+
   document
     .getElementById("codigoInput")
     .addEventListener(
@@ -2991,7 +2999,29 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
           return;
         }
 
+        /*
+          Si el nuevo valor no continúa al anterior (se borró o se reemplazó),
+          consideramos que empieza una entrada nueva.
+        */
+
+        const continua =
+          valor.length > ultimoValor.length &&
+          valor.indexOf(ultimoValor) === 0;
+
+        if (!continua) {
+          inicioEscritura = 0;
+        }
+
         ultimoValor = valor;
+
+        if (valor === "") {
+          inicioEscritura = 0;
+          return;
+        }
+
+        if (inicioEscritura === 0) {
+          inicioEscritura = performance.now();
+        }
 
         /*
           Los códigos de barra normalmente
@@ -3016,7 +3046,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
               codigo
             );
 
-            this.select();
+            /*
+              Sólo seleccionamos el texto si la entrada fue muy rápida
+              (lector de códigos o pegado). Si la persona escribió a mano,
+              dejamos el texto tal cual para no borrárselo al seguir tecleando.
+            */
+
+            const entradaRapida =
+              (performance.now() - inicioEscritura) <= 600;
+
+            if (entradaRapida) {
+              this.select();
+            }
 
           }
 
@@ -3113,7 +3154,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       cerrar.style.borderRadius = "12px";
       cerrar.style.fontWeight = "bold";
 
-      cerrar.onclick = detenerEscaner;
+      cerrar.onclick = cancelarEscaner;
 
       const linterna = document.createElement("button");
       linterna.id = "btnLinterna";
@@ -3144,12 +3185,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         const encendida = linterna.dataset.on !== "1";
 
         try {
-          const caps = track.getCapabilities?.() || {};
-          const settingsAntes = track.getSettings?.() || {};
-
-          console.log("Torch capabilities:", caps);
-          console.log("Torch settings antes:", settingsAntes);
-
           let ultimoError = null;
           let aplicado = false;
 
@@ -3174,7 +3209,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
           await new Promise(resolve => setTimeout(resolve, 120));
 
           const settingsDespues = track.getSettings?.() || {};
-          console.log("Torch settings después:", settingsDespues);
 
           /* Si el navegador informa el estado de torch, lo verificamos.
              Si no lo informa, dejamos que el cambio visual refleje el intento aceptado. */
@@ -3223,7 +3257,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         if (track) {
           try {
             const caps = track.getCapabilities?.() || {};
-            console.log("Capacidades de cámara:", caps);
 
             if (caps.torch === true) {
               linterna.style.display = "block";
@@ -3261,9 +3294,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
           await track.applyConstraints({
             advanced: [{ focusMode: "continuous" }]
           });
-          console.log("Autofocus continuo activado.");
-        } else {
-          console.log("El navegador no expone control de autofocus; se usa el autofocus nativo.");
         }
       } catch (e) {
         console.warn("No se pudo configurar autofocus continuo; se mantiene el autofocus nativo:", e);
@@ -3271,9 +3301,15 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     }
 
 
+    function cancelarEscaner(){
+      /* Al cancelar, el próximo escaneo ya no debe ir dirigido a la lista. */
+      escaneoParaLista = false;
+      detenerEscaner();
+    }
+
     function alPresionarEscape(e){
       if (e.key === "Escape") {
-        detenerEscaner();
+        cancelarEscaner();
       }
     }
 
@@ -3406,7 +3442,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       } catch (error) {
 
         console.error("Error ZXing iOS:", error);
-        detenerEscaner();
+        cancelarEscaner();
 
         dialogoAviso({
           titulo:"No se pudo iniciar la cámara",
@@ -3524,7 +3560,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     } catch (error) {
 
       console.error("Error al iniciar el escáner:", error);
-      detenerEscaner();
+      cancelarEscaner();
 
       dialogoAviso({
         titulo:"No se pudo iniciar el lector",
