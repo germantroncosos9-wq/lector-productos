@@ -14,13 +14,10 @@ const ARCHIVOS = [
 
 /*
   Hosts que NO deben cachearse:
-  - Analítica (Google Analytics / Tag Manager).
-  - La API de Google Sheets (JSONP dinámico): cachearla serviría
+  - La API de Google Sheets (respuesta dinámica): cachearla serviría
     datos viejos al pulsar "Actualizar productos".
 */
 const HOSTS_SIN_CACHE = [
-  "googletagmanager.com",
-  "google-analytics.com",
   "script.google.com",
   "googleusercontent.com"
 ];
