@@ -22,8 +22,14 @@
 
   /* Base de datos local e índice de productos. */
   const DB_NAME = "LectorProductosDB";
-  const DB_VERSION = 4;
+  const DB_VERSION = 5;      /* v5: el registro "base" guarda su `esquema`. */
   const STORE_NAME = "productos";
+  /*
+    Versión del FORMATO del registro "base" (independiente de la versión
+    de la base de datos). Permite evolucionar el contenido guardado sin
+    reestructurar el almacén. Ver migrarRegistroBase().
+  */
+  const ESQUEMA_BASE = 2;
   let productos = [];
   let indice = {};
   let indiceInterno = {};
@@ -487,12 +493,46 @@
 
         const database = event.target.result;
 
+        /*
+          Migraciones de la base local. Se ejecutan dentro de la propia
+          transacción `versionchange`, aplicando solo los pasos pendientes
+          según la versión anterior (`event.oldVersion`).
+
+          v1: crear el almacén.
+        */
         if (!database.objectStoreNames.contains(STORE_NAME)) {
 
           database.createObjectStore(
             STORE_NAME,
             { keyPath: "id" }
           );
+
+        }
+
+        /*
+          v5: normalizar el registro "base" ya existente para que incluya
+          su `esquema`. Es una migración de datos, no de estructura.
+        */
+        if (event.oldVersion > 0 && event.oldVersion < 5) {
+
+          const store =
+            event.target.transaction.objectStore(STORE_NAME);
+
+          const peticion = store.get("base");
+
+          peticion.onsuccess = function() {
+
+            const registro = peticion.result;
+
+            if (registro && typeof registro.esquema !== "number") {
+
+              registro.esquema = ESQUEMA_BASE;
+
+              store.put(registro);
+
+            }
+
+          };
 
         }
 
@@ -518,6 +558,42 @@
 
 
   /* =========================================================
+     MIGRAR EL REGISTRO "base"
+
+     Se ejecuta al cargar la base local, de forma que el contenido
+     guardado por una versión anterior de la app pueda leerse sin
+     perder datos, y el contenido guardado por una versión MÁS NUEVA
+     no se interprete a ciegas.
+  ========================================================= */
+
+  function migrarRegistroBase(registro) {
+
+    /* Nada guardado, o formato ilegible. */
+    if (!registro || !Array.isArray(registro.productos)) {
+      return null;
+    }
+
+    /* Los registros anteriores a v5 no tenían el campo `esquema`. */
+    const esquema = Number(registro.esquema) || 1;
+
+    /* Guardado por una versión más nueva: no lo usamos. */
+    if (esquema > ESQUEMA_BASE) {
+      return null;
+    }
+
+    /*
+      Futuras migraciones del contenido irían aquí, en orden:
+        if (esquema === 1) { ...; esquema = 2; }
+    */
+
+    registro.esquema = ESQUEMA_BASE;
+
+    return registro;
+
+  }
+
+
+  /* =========================================================
      GUARDAR PRODUCTOS EN INDEXEDDB
   ========================================================= */
 
@@ -536,6 +612,7 @@
 
       store.put({
         id: "base",
+        esquema: ESQUEMA_BASE,
         productos: productos,
         fecha: new Date().toISOString()
       });
@@ -579,22 +656,25 @@
 
       request.onsuccess = function() {
 
-        if (request.result) {
+        const registro =
+          migrarRegistroBase(request.result);
+
+        if (registro) {
 
           productos =
-            request.result.productos || [];
+            registro.productos;
 
           construirIndice();
 
           mostrarCantidad();
 
           mostrarFecha(
-            request.result.fecha
+            registro.fecha
           );
 
         }
 
-        resolve(request.result);
+        resolve(registro);
 
       };
 
