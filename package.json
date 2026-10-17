@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "lint": "npm run lint:js && npm run lint:css",
-    "lint:js": "eslint app.js sw.js",
+    "lint:js": "eslint js/app.js sw.js",
     "lint:css": "stylelint \"css/styles.css\""
   },
   "devDependencies": {

@@ -5,7 +5,7 @@ const ARCHIVOS = [
   "./",
   "./index.html",
   "./css/styles.css",
-  "./app.js",
+  "./js/app.js",
   "./manifest.json",
   "./img/banner-cruz-verde.png",
   "./img/icon-192.png",

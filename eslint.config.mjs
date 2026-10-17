@@ -3,7 +3,7 @@ import globals from "globals";
 
 /*
   Configuración de ESLint (flat config) para el JavaScript del proyecto.
-  `app.js` es un script clásico cargado desde index.html; `sw.js` corre
+  `js/app.js` es un script clásico cargado desde index.html; `sw.js` corre
   en el contexto del service worker.
 */
 export default [
@@ -11,7 +11,7 @@ export default [
     ignores: ["node_modules/**", "vendor/**"]
   },
   {
-    files: ["app.js"],
+    files: ["js/app.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "script",
