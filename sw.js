@@ -7,11 +7,11 @@ const ARCHIVOS = [
   "./styles.css",
   "./app.js",
   "./manifest.json",
-  "./banner-cruz-verde.png",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon-maskable-512.png",
-  "./apple-touch-icon.png",
+  "./img/banner-cruz-verde.png",
+  "./img/icon-192.png",
+  "./img/icon-512.png",
+  "./img/icon-maskable-512.png",
+  "./img/apple-touch-icon.png",
   "./vendor/zxing-browser.min.js"
 ];
 
