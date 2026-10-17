@@ -134,7 +134,7 @@
       color: var(--texto-suave) !important;
     }
 
-    body[data-theme="pink"] .app-intro h2,
+    body[data-theme="pink"] .app-intro h1,
     body[data-theme="pink"] .codigo-label,
     body[data-theme="pink"] .codigo-valor {
       color: var(--verde-oscuro) !important;
@@ -183,17 +183,13 @@
       border-radius: 16px;
     }
 
-    header h1 {
-      display: none;
-    }
-
     .app-intro {
       text-align: center;
       margin: 2px 0 14px;
       padding: 0 8px;
     }
 
-    .app-intro h2 {
+    .app-intro h1 {
       margin: 0 0 3px;
       color: var(--verde);
       font-size: 22px;
@@ -441,7 +437,7 @@
     }
   
     /* ===== CONTRASTE COMPLETO PARA TEMAS ===== */
-    body[data-theme="dark"] .app-intro h2,
+    body[data-theme="dark"] .app-intro h1,
     body[data-theme="dark"] h1,
     body[data-theme="dark"] h2,
     body[data-theme="dark"] h3,
@@ -496,7 +492,7 @@
       color: var(--texto) !important;
     }
 
-    body[data-theme="pink"] .app-intro h2,
+    body[data-theme="pink"] .app-intro h1,
     body[data-theme="pink"] .codigo-label,
     body[data-theme="pink"] .codigo-valor,
     body[data-theme="pink"] .oai-valor {
@@ -725,7 +721,7 @@
     header { margin-bottom: 7px !important; }
     header img { max-height: 105px; object-fit: cover; }
     .app-intro { margin: 0 0 8px !important; }
-    .app-intro h2 { font-size: 19px !important; margin-bottom: 1px !important; }
+    .app-intro h1 { font-size: 19px !important; margin-bottom: 1px !important; }
     .app-intro p { font-size: 12px !important; }
 
     .estado {
@@ -753,7 +749,7 @@
     @media (max-width: 400px) {
       header img { max-height: 88px; }
       .contenedor { padding-top: 9px; }
-      .app-intro h2 { font-size: 18px !important; }
+      .app-intro h1 { font-size: 18px !important; }
     }
 
 
@@ -1276,11 +1272,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       src="banner-cruz-verde.png"
       alt="Cruz Verde"
     >
-    <h1>Lector de Productos</h1>
   </header>
 
     <div class="app-intro">
-      <h2>Lector de Productos</h2>
+      <h1>Lector de Productos</h1>
       <p>Escanea o ingresa un código de barras</p>
     </div>
   <div class="buscador">
@@ -2651,11 +2646,16 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   ========================================================= */
 
 
+  let ayudaFocoPrevio = null;
+
   function abrirAyuda(){
     const modal=document.getElementById("ayudaModal");
+    ayudaFocoPrevio = document.activeElement;
     modal.classList.add("abierto");
     modal.setAttribute("aria-hidden","false");
     document.body.style.overflow="hidden";
+    const cerrar = document.getElementById("cerrarAyuda");
+    if (cerrar) cerrar.focus();
   }
 
   function cerrarAyuda(){
@@ -2663,6 +2663,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     modal.classList.remove("abierto");
     modal.setAttribute("aria-hidden","true");
     document.body.style.overflow="";
+    if (ayudaFocoPrevio && typeof ayudaFocoPrevio.focus === "function") {
+      ayudaFocoPrevio.focus();
+    }
+    ayudaFocoPrevio = null;
   }
 
   document.getElementById("btnAyuda").addEventListener("click",abrirAyuda);
@@ -2767,12 +2771,17 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     }
   });
 
-  /* Escape cierra el diálogo abierto */
+  /* Escape cierra el diálogo o la ayuda abiertos */
   document.addEventListener("keydown", function(e){
     if (e.key !== "Escape") return;
-    const modal = document.getElementById("dialogoModal");
-    if (modal && modal.classList.contains("abierto")) {
+    const dlg = document.getElementById("dialogoModal");
+    if (dlg && dlg.classList.contains("abierto")) {
       cerrarDialogo(null);
+      return;
+    }
+    const ayuda = document.getElementById("ayudaModal");
+    if (ayuda && ayuda.classList.contains("abierto")) {
+      cerrarAyuda();
     }
   });
 
@@ -3027,6 +3036,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
   async function iniciarEscaner() {
 
+    const focoOrigen = document.activeElement;
+
     const esIOS =
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -3047,6 +3058,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       overlay.style.display = "flex";
       overlay.style.alignItems = "center";
       overlay.style.justifyContent = "center";
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute("aria-label", "Escáner de códigos de barras");
 
       video = document.createElement("video");
       video.autoplay = true;
@@ -3084,6 +3098,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       const cerrar = document.createElement("button");
       cerrar.textContent = "✕ CERRAR";
+      cerrar.setAttribute("type", "button");
+      cerrar.setAttribute("aria-label", "Cerrar escáner");
       cerrar.style.position = "absolute";
       cerrar.style.bottom = "28px";
       cerrar.style.left = "50%";
@@ -3192,6 +3208,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       overlay.appendChild(cerrar);
       document.body.appendChild(overlay);
 
+      cerrar.focus();
+
     }
 
     async function detectarLinterna() {
@@ -3253,6 +3271,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     }
 
 
+    function alPresionarEscape(e){
+      if (e.key === "Escape") {
+        detenerEscaner();
+      }
+    }
+
     function detenerEscaner() {
 
       if (cerrado) {
@@ -3260,6 +3284,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       }
 
       cerrado = true;
+
+      document.removeEventListener("keydown", alPresionarEscape);
 
       try {
         if (controlesZXing && typeof controlesZXing.stop === "function") {
@@ -3288,6 +3314,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       if (overlay) {
         overlay.remove();
+      }
+
+      if (focoOrigen && typeof focoOrigen.focus === "function") {
+        focoOrigen.focus();
       }
 
     }
@@ -3320,6 +3350,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       buscarProductoLocal(valor);
 
     }
+
+    document.addEventListener("keydown", alPresionarEscape);
 
     crearVisor();
 
