@@ -1862,6 +1862,13 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   const API_URL =
     "https://script.google.com/macros/s/AKfycbyqEEUwd53K_dH46WXre5iF55yQBoyOs_y5sRgbTIdroIMGvXcVDfP3H62EkKN3uqmz/exec";
 
+  /*
+    Tiempo máximo (ms) que esperamos la respuesta de Google Sheets.
+    Si se supera, abortamos la actualización, restauramos el botón
+    y permitimos reintentar sin recargar la página.
+  */
+  const TIEMPO_MAX_ACTUALIZACION_MS = 25000;
+
   const DB_NAME = "LectorProductosDB";
   const DB_VERSION = 4;
   const STORE_NAME = "productos";
@@ -2627,31 +2634,69 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
     const btnActualizar = document.getElementById("btnActualizarProductos");
     if (btnActualizar?.disabled) return;
+
+    const mensaje = document.getElementById("mensaje");
+    const callbackName = "callbackProductos_" + Date.now();
+
+    /*
+      Control de estado para que la actualización termine SIEMPRE
+      por un único camino (callback, onerror o timeout) y el botón
+      nunca quede bloqueado.
+    */
+    let finalizado = false;
+    let temporizador = null;
+    let script = null;
+
+    function restaurarBoton() {
+      if (btnActualizar) {
+        btnActualizar.disabled = false;
+        btnActualizar.textContent = "↻ Actualizar productos";
+      }
+    }
+
+    function limpiarRecursos() {
+      if (temporizador) {
+        clearTimeout(temporizador);
+        temporizador = null;
+      }
+
+      if (script) {
+        script.remove();
+        script = null;
+      } else {
+        const existente = document.getElementById(callbackName);
+        if (existente) existente.remove();
+      }
+
+      delete window[callbackName];
+    }
+
+    function finalizarConError(texto) {
+      if (finalizado) return;
+      finalizado = true;
+      limpiarRecursos();
+      restaurarBoton();
+      mensaje.className = "mensaje error";
+      mensaje.textContent = texto;
+      terminarProgresoActualizacion();
+    }
+
     if (btnActualizar) {
       btnActualizar.disabled = true;
       btnActualizar.textContent = "↻ Actualizando…";
     }
 
-    estadoProgresoActualizacion("descargando","Descargando listado de productos…");
+    estadoProgresoActualizacion("descargando", "Descargando listado de productos…");
 
-    const mensaje =
-      document.getElementById(
-        "mensaje"
-      );
-
-    mensaje.className =
-      "mensaje cargando";
-
-    mensaje.textContent =
-      "⏳ Actualizando productos...";
-
-    const callbackName =
-      "callbackProductos_" +
-      Date.now();
-
+    mensaje.className = "mensaje cargando";
+    mensaje.textContent = "⏳ Actualizando productos...";
 
     window[callbackName] =
       function(data) {
+
+        if (finalizado) return;
+        finalizado = true;
+        limpiarRecursos();
 
         try {
 
@@ -2677,11 +2722,22 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
           mostrarCantidad();
 
+          /*
+            Fecha de actualización: preferimos la que entregue el
+            servidor. Si la respuesta no la incluye, usamos la del
+            dispositivo como respaldo.
+          */
+          const fechaServidor =
+            data.fecha ||
+            data.FECHA ||
+            data.fechaActualizacion ||
+            data.actualizado;
+
           guardarProductos()
             .then(function() {
 
               mostrarFecha(
-                new Date().toISOString()
+                fechaServidor || new Date().toISOString()
               );
 
               mensaje.className =
@@ -2691,10 +2747,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
                 "✅ Productos actualizados correctamente.";
 
               estadoProgresoActualizacion("completo","✅ Actualización completada.");
-              if (btnActualizar) {
-                btnActualizar.disabled = false;
-                btnActualizar.textContent = "↻ Actualizar productos";
-              }
+              restaurarBoton();
               terminarProgresoActualizacion();
 
             })
@@ -2708,10 +2761,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
               mensaje.textContent =
                 "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
 
-              if (btnActualizar) {
-                btnActualizar.disabled = false;
-                btnActualizar.textContent = "↻ Actualizar productos";
-              }
+              restaurarBoton();
               terminarProgresoActualizacion();
 
             });
@@ -2726,29 +2776,15 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
           mensaje.textContent =
             "❌ Error procesando los productos.";
 
-          if (btnActualizar) {
-            btnActualizar.disabled = false;
-            btnActualizar.textContent = "↻ Actualizar productos";
-          }
+          restaurarBoton();
           terminarProgresoActualizacion();
 
         }
 
-        const script =
-          document.getElementById(
-            callbackName
-          );
-
-        if (script) {
-          script.remove();
-        }
-
-        delete window[callbackName];
-
       };
 
 
-    const script =
+    script =
       document.createElement("script");
 
     script.id =
@@ -2764,23 +2800,27 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     script.onerror =
       function() {
 
-        mensaje.className =
-          "mensaje error";
-
-        mensaje.textContent =
-          "❌ No se pudo conectar con Google Sheets.";
-
-        if (btnActualizar) {
-          btnActualizar.disabled = false;
-          btnActualizar.textContent = "↻ Actualizar productos";
-        }
-        terminarProgresoActualizacion();
-
-        script.remove();
-
-        delete window[callbackName];
+        finalizarConError(
+          "❌ No se pudo conectar con Google Sheets."
+        );
 
       };
+
+    /*
+      Red de seguridad: si la API no responde ni dispara el callback
+      ni el onerror, abortamos para no dejar el botón bloqueado.
+    */
+    temporizador =
+      setTimeout(
+        function() {
+
+          finalizarConError(
+            "⌛ La actualización tardó demasiado. Revisa tu conexión e inténtalo de nuevo."
+          );
+
+        },
+        TIEMPO_MAX_ACTUALIZACION_MS
+      );
 
 
     document.body.appendChild(script);
