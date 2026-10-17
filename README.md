@@ -35,14 +35,14 @@ base local.
 | Archivo | Descripción |
 |---|---|
 | `index.html` | Estructura de la interfaz (incluye los modales de Ayuda, diálogos y listas). |
-| `styles.css` | Estilos y definición de los tres temas. |
-| `app.js` | Toda la lógica de la aplicación (script clásico). |
-| `sw.js` | Service worker: soporte sin conexión y precarga de recursos. |
+| `css/styles.css` | Estilos y definición de los tres temas. |
+| `js/app.js` | Toda la lógica de la aplicación (script clásico). |
+| `sw.js` | Service worker: soporte sin conexión y precarga de recursos. **Debe permanecer en la raíz**: si se mueve a una subcarpeta, su alcance dejaría de cubrir toda la app. |
 | `manifest.json` | Metadatos de la PWA (nombre, iconos, colores). |
-| `icon-*.png`, `apple-touch-icon.png`, `banner-cruz-verde.png` | Iconos e imagen de marca. |
+| `img/icon-*.png`, `img/apple-touch-icon.png`, `img/banner-cruz-verde.png` | Iconos e imagen de marca. |
 | `vendor/zxing-browser.min.js` | Librería ZXing (lectura de códigos) alojada localmente, con `integrity` (SRI). |
 | `vendor/LICENSE-zxing-browser.txt` | Licencia de ZXing (MIT). |
-| `package.json`, `eslint.config.js`, `stylelint.config.js` | Herramientas de calidad de código (solo desarrollo). |
+| `package.json`, `eslint.config.mjs`, `stylelint.config.mjs` | Herramientas de calidad de código (solo desarrollo). |
 
 ---
 
@@ -51,7 +51,7 @@ base local.
 ### Origen de los datos
 
 Los datos viven en una **hoja de Google Sheets** publicada mediante una **Web App de
-Google Apps Script**. Su URL está en `app.js` (`const API_URL`). La app la consulta con
+Google Apps Script**. Su URL está en `js/app.js` (`const API_URL`). La app la consulta con
 `fetch` y un `AbortController` que aplica un **tiempo máximo de 25 s** (el listado pesa
 unos 8 MB, por eso el margen es amplio).
 
@@ -87,11 +87,18 @@ La respuesta tiene esta forma:
 Al abrir la app se carga el listado desde IndexedDB, de modo que **se puede usar sin
 conexión** sin volver a descargar nada.
 
+El registro "base" lleva un campo `esquema` con la versión de su formato. Al cargarlo,
+`migrarRegistroBase()` aplica las migraciones necesarias e **ignora** los registros
+guardados por una versión más nueva de la app o ilegibles (en ese caso se pide volver a
+actualizar la base). Las migraciones de la estructura de la base se aplican en
+`onupgradeneeded`, según `oldVersion`.
+
 ### Búsqueda
 
 `buscarProducto(codigo)` intenta, en este orden: código de barras exacto → coincidencia
-por `CÓDIGO INTERNO` → variante **sin ceros iniciales** (`codigoCanonico`). El índice de
-códigos de barras se construye en memoria al cargar la base.
+por `CÓDIGO INTERNO` → variante **sin ceros iniciales** (`codigoCanonico`). Todo se
+resuelve con índices construidos en memoria al cargar la base (`indice` para los códigos
+de barras e `indiceInterno` para los códigos internos), sin recorridos lineales.
 
 ### Service worker
 
@@ -131,7 +138,7 @@ npm run lint:js  # solo JavaScript
 npm run lint:css # solo CSS
 ```
 
-Comprobación rápida de sintaxis sin dependencias: `node --check app.js`.
+Comprobación rápida de sintaxis sin dependencias: `node --check js/app.js`.
 
 > **Nota:** `npm audit` reporta una vulnerabilidad de severidad alta en una
 > dependencia **transitiva de desarrollo** de Stylelint (`braces`, vía
@@ -152,8 +159,8 @@ git merge mejoras
 git push origin main
 ```
 
-> Al cambiar `index.html`, `styles.css` o `app.js`, conviene **subir `CACHE_NAME` en
-> `sw.js`** (por ejemplo `lector-productos-v7` → `v8`) para forzar que los usuarios
+> Al cambiar `index.html`, `css/styles.css` o `js/app.js`, conviene **subir `CACHE_NAME`
+> en `sw.js`** (por ejemplo `lector-productos-v8` → `v9`) para forzar que los usuarios
 > reciban la versión nueva.
 
 ### Actualizar los datos
