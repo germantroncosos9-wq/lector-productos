@@ -1210,6 +1210,40 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   }
 
 
+  /* Diálogos propios (reemplazan alert/confirm/prompt del navegador) */
+  .dialogo-modal{
+    display:none;position:fixed;inset:0;z-index:13000;padding:18px;
+    background:rgba(0,0,0,.58);overflow:auto;
+    align-items:center;justify-content:center;
+  }
+  .dialogo-modal.abierto{display:flex}
+  .dialogo-panel{
+    width:min(100%,420px);margin:auto;background:#fff;color:#26352d;
+    border-radius:18px;padding:18px;box-shadow:0 12px 38px rgba(0,0,0,.28);
+  }
+  .dialogo-titulo{margin:0 0 8px;font-size:18px}
+  .dialogo-mensaje{margin:0 0 12px;font-size:14px;line-height:1.45}
+  .dialogo-input{
+    width:100%;box-sizing:border-box;padding:11px 12px;margin-bottom:14px;
+    border:1px solid #cfe0d6;border-radius:11px;font-size:15px;
+  }
+  .dialogo-acciones{display:flex;gap:9px;justify-content:flex-end}
+  .dialogo-btn{
+    padding:11px 15px;border-radius:11px;border:0;font-weight:800;font-size:14px;cursor:pointer;
+  }
+  .dialogo-btn-secundario{background:#edf4ef;color:#17633d}
+  .dialogo-btn-principal{background:#00843d;color:#fff}
+  .dialogo-btn-principal.peligro{background:#c0392b}
+  body[data-theme="dark"] .dialogo-panel{background:#151e19;color:#f2f7f4}
+  body[data-theme="dark"] .dialogo-input{background:#1b2420;color:#f2f7f4;border-color:#2c3a33}
+  body[data-theme="dark"] .dialogo-btn-secundario{background:#27342e;color:#f2f7f4}
+  body[data-theme="dark"] .dialogo-btn-principal{background:#2ecc71;color:#102018}
+  body[data-theme="pink"] .dialogo-panel{background:#fffafb;color:#5d3340}
+  body[data-theme="pink"] .dialogo-input{background:#fff;color:#5d3340;border-color:#edbdcd}
+  body[data-theme="pink"] .dialogo-btn-secundario{background:#f8dce5;color:#7d3850}
+  body[data-theme="pink"] .dialogo-btn-principal{background:#d86b8e;color:#fff}
+
+
   /* Aviso discreto cuando el listado lleva 14 días o más sin actualizarse */
   .aviso-listado-antiguo{
     margin:0 0 8px;padding:9px 11px;border-radius:11px;
@@ -1413,6 +1447,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     </div>
   </div>
 
+  <div id="dialogoModal" class="dialogo-modal" aria-hidden="true">
+    <div class="dialogo-panel" role="dialog" aria-modal="true" aria-labelledby="dialogoTitulo" aria-describedby="dialogoMensaje">
+      <h2 id="dialogoTitulo" class="dialogo-titulo"></h2>
+      <p id="dialogoMensaje" class="dialogo-mensaje"></p>
+      <input id="dialogoInput" class="dialogo-input" type="text" autocomplete="off">
+      <div class="dialogo-acciones">
+        <button id="dialogoCancelar" class="dialogo-btn dialogo-btn-secundario" type="button">Cancelar</button>
+        <button id="dialogoAceptar" class="dialogo-btn dialogo-btn-principal" type="button">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
   <button id="btnListas" class="listas-btn-principal" type="button">📋 LISTAS</button>
 
   <div id="listasVista" class="listas-vista">
@@ -1551,9 +1597,15 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     });
   }
 
-  function crearLista(){
-    const nombre = prompt("Nombre de la nueva lista:", "Nueva lista");
-    if(!nombre || !nombre.trim()) return;
+  async function crearLista(){
+    const nombre = await dialogoPedirTexto({
+      titulo:"Nueva lista",
+      mensaje:"Escribe el nombre de la nueva lista.",
+      valorInicial:"Nueva lista",
+      placeholder:"Nombre de la lista",
+      textoAceptar:"Crear"
+    });
+    if(nombre===null || !nombre.trim()) return;
     const l = { id: String(Date.now()), nombre: nombre.trim(), creada: Date.now(), items: [] };
     listasPersonalizadas.unshift(l);
     guardarListasPersonalizadas();
@@ -1654,16 +1706,28 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     escaneoParaListaCerrado = false;
   }
 
-  function renombrarLista(){
+  async function renombrarLista(){
     const l=listaActiva(); if(!l) return;
-    const n=prompt("Nuevo nombre:",l.nombre);
-    if(!n || !n.trim()) return;
+    const n=await dialogoPedirTexto({
+      titulo:"Renombrar lista",
+      mensaje:"Escribe el nuevo nombre.",
+      valorInicial:l.nombre,
+      placeholder:"Nombre de la lista",
+      textoAceptar:"Guardar"
+    });
+    if(n===null || !n.trim()) return;
     l.nombre=n.trim(); guardarListasPersonalizadas(); renderListaActiva();
   }
 
-  function borrarLista(){
+  async function borrarLista(){
     const l=listaActiva(); if(!l) return;
-    if(!confirm(`¿Eliminar la lista "${l.nombre}"?`)) return;
+    const ok=await dialogoConfirmar({
+      titulo:"Eliminar lista",
+      mensaje:`¿Eliminar la lista "${l.nombre}"? Esta acción no se puede deshacer.`,
+      textoAceptar:"Eliminar",
+      peligro:true
+    });
+    if(!ok) return;
     listasPersonalizadas=listasPersonalizadas.filter(x=>x.id!==l.id);
     guardarListasPersonalizadas(); volverAListas();
   }
@@ -2607,6 +2671,111 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     if(e.target===this) cerrarAyuda();
   });
 
+  /* =========================================================
+     DIÁLOGOS PROPIOS (reemplazan alert/confirm/prompt)
+  ========================================================= */
+
+  let dialogoResolver = null;
+  let dialogoFocoPrevio = null;
+
+  function mostrarDialogo(opciones){
+    return new Promise(function(resolve){
+      dialogoResolver = resolve;
+
+      const modal = document.getElementById("dialogoModal");
+      const titulo = document.getElementById("dialogoTitulo");
+      const mensaje = document.getElementById("dialogoMensaje");
+      const input = document.getElementById("dialogoInput");
+      const btnAceptar = document.getElementById("dialogoAceptar");
+      const btnCancelar = document.getElementById("dialogoCancelar");
+      const tipo = opciones.tipo || "aviso";
+
+      titulo.textContent = opciones.titulo || "";
+      mensaje.textContent = opciones.mensaje || "";
+      mensaje.style.display = opciones.mensaje ? "" : "none";
+
+      input.style.display = tipo === "texto" ? "" : "none";
+      input.value = opciones.valorInicial || "";
+      input.placeholder = opciones.placeholder || "";
+
+      btnCancelar.style.display = tipo === "aviso" ? "none" : "";
+      btnAceptar.textContent = opciones.textoAceptar || "Aceptar";
+      btnCancelar.textContent = opciones.textoCancelar || "Cancelar";
+      btnAceptar.classList.toggle("peligro", !!opciones.peligro);
+
+      dialogoFocoPrevio = document.activeElement;
+
+      modal.classList.add("abierto");
+      modal.setAttribute("aria-hidden","false");
+
+      if (tipo === "texto") {
+        input.focus();
+        input.select();
+      } else {
+        btnAceptar.focus();
+      }
+    });
+  }
+
+  function cerrarDialogo(resultado){
+    const modal = document.getElementById("dialogoModal");
+    if (!modal.classList.contains("abierto")) return;
+
+    modal.classList.remove("abierto");
+    modal.setAttribute("aria-hidden","true");
+
+    const resolver = dialogoResolver;
+    dialogoResolver = null;
+
+    const foco = dialogoFocoPrevio;
+    dialogoFocoPrevio = null;
+    if (foco && typeof foco.focus === "function") foco.focus();
+
+    if (resolver) resolver(resultado);
+  }
+
+  function dialogoPedirTexto(opciones){
+    return mostrarDialogo(Object.assign({ tipo:"texto" }, opciones));
+  }
+
+  function dialogoConfirmar(opciones){
+    return mostrarDialogo(Object.assign({ tipo:"confirmar" }, opciones));
+  }
+
+  function dialogoAviso(opciones){
+    return mostrarDialogo(Object.assign({ tipo:"aviso" }, opciones));
+  }
+
+  document.getElementById("dialogoAceptar").addEventListener("click", function(){
+    const input = document.getElementById("dialogoInput");
+    const esTexto = input.style.display !== "none";
+    cerrarDialogo(esTexto ? input.value : true);
+  });
+
+  document.getElementById("dialogoCancelar").addEventListener("click", function(){
+    cerrarDialogo(null);
+  });
+
+  document.getElementById("dialogoModal").addEventListener("click", function(e){
+    if (e.target === this) cerrarDialogo(null);
+  });
+
+  document.getElementById("dialogoInput").addEventListener("keydown", function(e){
+    if (e.key === "Enter") {
+      e.preventDefault();
+      document.getElementById("dialogoAceptar").click();
+    }
+  });
+
+  /* Escape cierra el diálogo abierto */
+  document.addEventListener("keydown", function(e){
+    if (e.key !== "Escape") return;
+    const modal = document.getElementById("dialogoModal");
+    if (modal && modal.classList.contains("abierto")) {
+      cerrarDialogo(null);
+    }
+  });
+
   function estadoProgresoActualizacion(estado,texto){
     const caja=document.getElementById("progresoActualizacion");
     const barra=document.getElementById("progresoBarra");
@@ -3207,9 +3376,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         console.error("Error ZXing iOS:", error);
         detenerEscaner();
 
-        alert(
-          "No se pudo iniciar la cámara. Revisa que Safari tenga permiso para usar la cámara y vuelve a intentarlo."
-        );
+        dialogoAviso({
+          titulo:"No se pudo iniciar la cámara",
+          mensaje:"Revisa que Safari tenga permiso para usar la cámara y vuelve a intentarlo."
+        });
 
         return;
 
@@ -3324,9 +3494,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       console.error("Error al iniciar el escáner:", error);
       detenerEscaner();
 
-      alert(
-        "No se pudo iniciar el lector de cámara. Asegúrate de abrir la página mediante HTTPS y permitir el acceso a la cámara."
-      );
+      dialogoAviso({
+        titulo:"No se pudo iniciar el lector",
+        mensaje:"Asegúrate de abrir la página mediante HTTPS y permitir el acceso a la cámara."
+      });
 
     }
 
