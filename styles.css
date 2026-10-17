@@ -104,10 +104,6 @@
       border-color: var(--borde) !important;
     }
 
-    body[data-theme="dark"] input::placeholder {
-      color: #819087;
-    }
-
     body[data-theme="dark"] .app-intro p,
     body[data-theme="dark"] footer,
     body[data-theme="pink"] .app-intro p,
@@ -125,7 +121,6 @@
       border-color: var(--verde) !important;
     }
 
-
     * {
       box-sizing: border-box;
     }
@@ -133,8 +128,6 @@
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: var(--fondo);
-      color: var(--texto);
     }
 
     .contenedor {
@@ -148,7 +141,6 @@
       background: transparent;
       border-radius: 16px;
       padding: 0;
-      margin-bottom: 12px;
       box-shadow: none;
       overflow: hidden;
     }
@@ -158,21 +150,18 @@
       width: 100%;
       max-width: none;
       height: auto;
-      object-fit: contain;
       object-position: center;
       border-radius: 16px;
     }
 
     .app-intro {
       text-align: center;
-      margin: 2px 0 14px;
       padding: 0 8px;
     }
 
     .app-intro h1 {
       margin: 0 0 3px;
       color: var(--verde);
-      font-size: 22px;
       font-weight: 800;
       line-height: 1.15;
     }
@@ -180,7 +169,6 @@
     .app-intro p {
       margin: 0;
       color: #66706b;
-      font-size: 14px;
       font-weight: 500;
     }
 
@@ -188,9 +176,6 @@
       text-align: center;
       background: white;
       border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 12px;
-      font-size: 13px;
       color: var(--gris);
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
@@ -201,9 +186,6 @@
 
     .buscador {
       background: white;
-      border-radius: 18px;
-      padding: 15px;
-      margin-bottom: 15px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.07);
     }
 
@@ -211,8 +193,6 @@
       width: 100%;
       border: 2px solid var(--gris-claro);
       border-radius: 12px;
-      padding: 15px;
-      font-size: 18px;
       outline: none;
       text-align: center;
     }
@@ -223,8 +203,6 @@
 
     .botones {
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
     }
 
     button {
@@ -260,9 +238,7 @@
 
     .mensaje {
       text-align: center;
-      padding: 15px;
       color: var(--gris);
-      font-size: 15px;
     }
 
     .resultado {
@@ -415,7 +391,7 @@
         font-size: 28px;
       }
     }
-  
+
     /* ===== CONTRASTE COMPLETO PARA TEMAS ===== */
     body[data-theme="dark"] .app-intro h1,
     body[data-theme="dark"] h1,
@@ -482,11 +458,6 @@
       border-color: var(--borde) !important;
     }
 
-    body[data-theme="pink"] input::placeholder {
-      color: #9a7888 !important;
-      opacity: 1;
-    }
-
     /* Los botones conservan texto blanco para asegurar contraste */
     body[data-theme="dark"] button:not(.tema-btn),
     body[data-theme="pink"] button:not(.tema-btn) {
@@ -498,7 +469,6 @@
     body[data-theme="pink"] .tema-btn {
       color: inherit !important;
     }
-
 
     /* ===== AJUSTE FINAL DE CONTRASTE ===== */
 
@@ -533,17 +503,10 @@
       color: #ffffff !important;
     }
 
-
     /* ===== ÚLTIMO AJUSTE: BUSCADOR Y BOTÓN ESCANEAR ===== */
     body[data-theme="dark"] input::placeholder {
       color: #d7e2dc !important;
       opacity: 1 !important;
-    }
-
-    body[data-theme="dark"] .btn-escanear {
-      background: transparent !important;
-      color: #2ecc71 !important;
-      border-color: #2ecc71 !important;
     }
 
     body[data-theme="pink"] input::placeholder {
@@ -555,12 +518,10 @@
       color: #ffffff !important;
     }
 
-
     body[data-theme="dark"] button:not(.tema-btn) span,
     body[data-theme="pink"] button:not(.tema-btn) span {
       color: inherit !important;
     }
-
 
     /* ===== MODO NOCTURNO: BLOQUES SUPERIORES ===== */
     body[data-theme="dark"] .estado,
@@ -600,11 +561,9 @@
       color: #ffffff !important;
     }
 
-
     /* ===== AVISO DESDE CONFIG ===== */
     .aviso-base {
       display: none;
-      margin: -2px 0 12px;
       padding: 12px 14px;
       border-radius: 12px;
       background: #fff8dc;
@@ -628,7 +587,6 @@
       border-color: #e8a8c4 !important;
       color: #8f4567 !important;
     }
-
 
     /* ===== VISTA COMPACTA: RESULTADOS MÁS ARRIBA ===== */
     header { margin-bottom: 7px !important; }
@@ -664,7 +622,6 @@
       .contenedor { padding-top: 9px; }
       .app-intro h1 { font-size: 18px !important; }
     }
-
 
     /* ===== MEJORAS EXTRA ===== */
 .codigo-card{cursor:pointer;position:relative}
@@ -706,7 +663,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     text-align: center !important;
   }
 
-
   /* ===== ÚLTIMO AJUSTE: TÍTULOS CENTRADOS ===== */
   .descriptor-card,
   .barras-card,
@@ -717,7 +673,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     text-align: center !important;
   }
 
-
   /* ===== EXPERIMENTAL: LISTAS PERSONALIZADAS ===== */
   .listas-btn-principal{
     width:100%;margin:8px 0 4px;padding:11px 12px;border:0;border-radius:12px;
@@ -727,8 +682,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     display:none;position:fixed;inset:0;z-index:8000;background:#f4f6f5;overflow:auto;
     padding:18px 14px 40px;
   }
-  body[data-theme="dark"] .listas-vista{background:#101713;color:#f2f7f4}
-  body[data-theme="pink"] .listas-vista{background:#fff4f7}
+
   .listas-panel{max-width:620px;margin:0 auto}
   .listas-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
   .listas-top h2{margin:0;flex:1;text-align:center;font-size:21px}
@@ -754,18 +708,17 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     background:#fff;border-radius:14px;padding:12px;margin-bottom:9px;box-shadow:0 2px 8px rgba(0,0,0,.07)
   }
   body[data-theme="dark"] .lista-producto{background:#1b2420}
-  .lista-prod-codigo{text-align:center;font-weight:900;font-size:18px;color:#08783d}
+  .lista-prod-codigo{font-weight:900;font-size:18px;color:#08783d}
   body[data-theme="dark"] .lista-prod-codigo{color:#2ecc71}
-  .lista-prod-desc{text-align:center;font-size:13px;margin:3px 0 10px}
-  .lista-cantidad{display:flex;justify-content:center;align-items:center;gap:7px}
-  .lista-cantidad button{width:38px;height:36px;border:0;border-radius:10px;font-size:20px;font-weight:900;cursor:pointer}
-  .lista-cantidad input{width:68px;height:36px;text-align:center;border:1px solid #ccd5d0;border-radius:10px;font-size:16px;font-weight:800}
-  .lista-eliminar{margin-left:5px!important;font-size:15px!important;background:#ffe9e9!important}
+  .lista-prod-desc{font-size:13px;}
+  .lista-cantidad{display:flex;justify-content:center;align-items:center;}
+  .lista-cantidad button{border:0;border-radius:10px;font-size:20px;font-weight:900;cursor:pointer}
+  .lista-cantidad input{height:36px;text-align:center;border:1px solid #ccd5d0;border-radius:10px;font-size:16px;font-weight:800}
+  .lista-eliminar{margin-left:5px!important;background:#ffe9e9!important}
   .lista-acciones{display:flex;gap:8px;margin-top:14px}
   .lista-acciones button{flex:1;border:0;border-radius:11px;padding:10px;font-weight:800;cursor:pointer}
   .lista-renombrar{background:#e8efeb}.lista-borrar{background:#ffe5e5;color:#9a2424}
   .lista-msg{text-align:center;min-height:20px;font-size:12px;font-weight:700;margin:-4px 0 8px}
-
 
   /* ===== LISTAS V2: distribución + temas ===== */
   .lista-editor-head{
@@ -867,7 +820,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     .lista-prod-desc{font-size:12px}
   }
 
-
   /* ===== LISTAS V3: botón principal acorde al tema ===== */
   body[data-theme="dark"] .listas-btn-principal{
     background:#1b2420 !important;
@@ -881,7 +833,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     border:1px solid #e6a9bc !important;
     box-shadow:0 3px 10px rgba(122,65,84,.10) !important;
   }
-
 
   /* ===== V4: JERARQUÍA DE ACCIONES ===== */
   .botones-principal{
@@ -962,7 +913,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     color:#b94f72 !important;
     border-color:rgba(185,79,114,.45) !important;
   }
-
 
   /* ===== V5: AYUDA + PROGRESO DE ACTUALIZACIÓN ===== */
   .progreso-actualizacion{
@@ -1047,7 +997,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   body[data-theme="pink"] .ayuda-importante{background:#fff3df;border-color:#efcf9d}
   body[data-theme="pink"] .ayuda-consejo{background:#fce7ee;border-color:#edbdcd}
 
-
   .ayuda-contacto{
     border-radius:13px;padding:12px;margin-top:12px;
     background:#eef7f1;border:1px solid #c8e2d1;text-align:center;
@@ -1074,7 +1023,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     background:#d86b8e;color:#fff!important;
   }
 
-
   /* V5.2: centrar perfectamente la X del botón de cerrar Ayuda */
   .ayuda-cerrar{
     display:flex !important;
@@ -1084,7 +1032,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     line-height:1 !important;
     flex:0 0 36px !important;
   }
-
 
   /* Diálogos propios (reemplazan alert/confirm/prompt del navegador) */
   .dialogo-modal{
@@ -1118,7 +1065,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   body[data-theme="pink"] .dialogo-input{background:#fff;color:#5d3340;border-color:#edbdcd}
   body[data-theme="pink"] .dialogo-btn-secundario{background:#f8dce5;color:#7d3850}
   body[data-theme="pink"] .dialogo-btn-principal{background:#d86b8e;color:#fff}
-
 
   /* Aviso discreto cuando el listado lleva 14 días o más sin actualizarse */
   .aviso-listado-antiguo{
