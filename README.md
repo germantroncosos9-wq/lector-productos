@@ -133,6 +133,12 @@ npm run lint:css # solo CSS
 
 Comprobación rápida de sintaxis sin dependencias: `node --check app.js`.
 
+> **Nota:** `npm audit` reporta una vulnerabilidad de severidad alta en una
+> dependencia **transitiva de desarrollo** de Stylelint (`braces`, vía
+> `globby`). No afecta al sitio publicado ni al código que se ejecuta en el
+> navegador, y `npm audit fix --force` la "resolvería" degradando Stylelint a
+> una versión muy antigua, por lo que se deja como está.
+
 ---
 
 ## Despliegue
