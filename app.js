@@ -1,11 +1,62 @@
   /* =========================================================
-     EXPERIMENTAL: LISTAS PERSONALIZADAS
+     ESTADO GLOBAL Y CONFIGURACIÓN
+     Todo el estado mutable de la aplicación, en un único lugar.
   ========================================================= */
+
+  /* Origen de datos y límite de espera de la actualización remota. */
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbyqEEUwd53K_dH46WXre5iF55yQBoyOs_y5sRgbTIdroIMGvXcVDfP3H62EkKN3uqmz/exec";
+
+  /*
+    Tiempo máximo (ms) que esperamos la respuesta de Google Sheets.
+    Si se supera, abortamos la actualización, restauramos el botón
+    y permitimos reintentar sin recargar la página.
+  */
+  const TIEMPO_MAX_ACTUALIZACION_MS = 25000;
+
+  /* Base de datos local e índice de productos. */
+  const DB_NAME = "LectorProductosDB";
+  const DB_VERSION = 4;
+  const STORE_NAME = "productos";
+  let productos = [];
+  let indice = {};
+  let db = null;
+
+  /* Preferencias del usuario (claves de localStorage y valores). */
+  const SONIDO_KEY = "lectorProductosSonidos";
+  const VIBRACION_KEY = "lectorProductosVibracion";
+  const ANIMACION_KEY = "lectorProductosAnimacion";
+  let sonidosActivos = true;
+  let vibracionActiva = true;
+  let animacionActiva = true;
+
+  /* Audio (Web Audio API). */
+  let audioCtx = null;
+  let masterGain = null;
+  let compressor = null;
+
+  /* Listas personalizadas (experimental). */
   const LISTAS_KEY = "lectorProductosListasV1";
   let listasPersonalizadas = [];
   let listaActivaId = null;
   let escaneoParaLista = false;
   let escaneoParaListaCerrado = false;
+
+  /* Modales y diálogos. */
+  let ayudaFocoPrevio = null;
+  let dialogoResolver = null;
+  let dialogoFocoPrevio = null;
+
+  /* Escáner: último valor visto y marca de inicio de escritura.
+     La marca permite distinguir una entrada "de lector" (rápida) de
+     una escritura manual y no seleccionar el texto mientras se escribe. */
+  let ultimoValor = "";
+  let inicioEscritura = 0;
+
+
+  /* =========================================================
+     EXPERIMENTAL: LISTAS PERSONALIZADAS
+  ========================================================= */
 
   function cargarListasPersonalizadas(){
     try { listasPersonalizadas = JSON.parse(localStorage.getItem(LISTAS_KEY) || "[]"); }
@@ -239,12 +290,6 @@
      SONIDOS DE ESCANEO Y RESULTADOS
   ========================================================= */
 
-  const SONIDO_KEY = "lectorProductosSonidos";
-  let sonidosActivos = true;
-  let audioCtx = null;
-  let masterGain = null;
-  let compressor = null;
-
   try {
     sonidosActivos = localStorage.getItem(SONIDO_KEY) !== "off";
   } catch (e) {}
@@ -339,9 +384,6 @@
 
 
   /* ===== PREFERENCIAS / VIBRACIÓN / COPIAR / ANIMACIÓN ===== */
-  const VIBRACION_KEY="lectorProductosVibracion";
-  const ANIMACION_KEY="lectorProductosAnimacion";
-  let vibracionActiva=true, animacionActiva=true;
   try{
     vibracionActiva=localStorage.getItem(VIBRACION_KEY)!=="off";
     animacionActiva=localStorage.getItem(ANIMACION_KEY)!=="off";
@@ -394,29 +436,6 @@
   document.getElementById("codigoInterno")?.addEventListener("keydown",function(e){
     if(e.key==="Enter" || e.key===" "){ e.preventDefault(); this.click(); }
   });
-
-  /* =========================================================
-     CONFIGURACIÓN
-  ========================================================= */
-
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbyqEEUwd53K_dH46WXre5iF55yQBoyOs_y5sRgbTIdroIMGvXcVDfP3H62EkKN3uqmz/exec";
-
-  /*
-    Tiempo máximo (ms) que esperamos la respuesta de Google Sheets.
-    Si se supera, abortamos la actualización, restauramos el botón
-    y permitimos reintentar sin recargar la página.
-  */
-  const TIEMPO_MAX_ACTUALIZACION_MS = 25000;
-
-  const DB_NAME = "LectorProductosDB";
-  const DB_VERSION = 4;
-  const STORE_NAME = "productos";
-
-  let productos = [];
-  let indice = {};
-  let db = null;
-
 
   /* =========================================================
      NORMALIZACIÓN DE CÓDIGOS
@@ -1105,8 +1124,6 @@
   ========================================================= */
 
 
-  let ayudaFocoPrevio = null;
-
   function abrirAyuda(){
     const modal=document.getElementById("ayudaModal");
     ayudaFocoPrevio = document.activeElement;
@@ -1137,9 +1154,6 @@
   /* =========================================================
      DIÁLOGOS PROPIOS (reemplazan alert/confirm/prompt)
   ========================================================= */
-
-  let dialogoResolver = null;
-  let dialogoFocoPrevio = null;
 
   function mostrarDialogo(opciones){
     return new Promise(function(resolve){
@@ -1428,16 +1442,6 @@
     También buscamos automáticamente
     cuando el lector pega/escribe un código.
   */
-
-  let ultimoValor = "";
-
-  /*
-    Marca de tiempo en la que empezó a escribirse el valor actual.
-    Se usa para distinguir una entrada "de lector" (rápida, casi instantánea)
-    de una escritura manual con el teclado, y así no seleccionar el texto
-    mientras la persona escribe.
-  */
-  let inicioEscritura = 0;
 
   document
     .getElementById("codigoInput")
