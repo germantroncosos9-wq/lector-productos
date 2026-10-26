@@ -1233,6 +1233,27 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     background:#fff3df;border-color:#efcf9d;color:#5d3340;
   }
 
+
+
+    /* ===== MENSAJE EMERGENTE CONFIGURABLE ===== */
+    .popup-aviso-fondo {
+      position: fixed; inset: 0; z-index: 99999;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; background: rgba(0,0,0,.58);
+    }
+    .popup-aviso-fondo.visible { display: flex; }
+    .popup-aviso {
+      width: 100%; max-width: 420px; background: var(--tarjeta, #fff);
+      color: var(--texto, #1f2937); border-radius: 18px; padding: 24px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.28); text-align: center;
+      border-top: 6px solid var(--verde, #00843D);
+    }
+    .popup-aviso h2 { margin: 0 0 12px; color: var(--verde, #00843D); font-size: 22px; }
+    .popup-aviso-texto { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; font-size: 16px; }
+    .popup-aviso-boton { margin-top: 20px; width: 100%; background: var(--verde, #00843D); color: white; }
+    body[data-theme="dark"] .popup-aviso { background: #1b2420; color: #f2f7f4; }
+    body[data-theme="pink"] .popup-aviso h2 { color: #b95784; }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -3497,6 +3518,59 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     if (!btn) return;
     applyTheme(btn.dataset.setTheme);
   });
+})();
+</script>
+
+
+
+<!-- MENSAJE EMERGENTE: el texto se configura en MENSAJE_EMERGENTE más abajo -->
+<div id="popupAvisoFondo" class="popup-aviso-fondo" role="dialog" aria-modal="true" aria-labelledby="popupAvisoTitulo" aria-hidden="true">
+  <div class="popup-aviso">
+    <h2 id="popupAvisoTitulo">📢 Aviso importante</h2>
+    <div id="popupAvisoTexto" class="popup-aviso-texto"></div>
+    <button id="popupAvisoCerrar" class="popup-aviso-boton" type="button">Entendido</button>
+  </div>
+</div>
+<script>
+(async function () {
+  // El texto y el título se editan en el archivo mensaje.json.
+  // Si "mensaje" está vacío, el aviso no aparece.
+  const fondo = document.getElementById("popupAvisoFondo");
+  const titulo = document.getElementById("popupAvisoTitulo");
+  const contenido = document.getElementById("popupAvisoTexto");
+  const cerrar = document.getElementById("popupAvisoCerrar");
+  if (!fondo || !titulo || !contenido || !cerrar) return;
+
+  try {
+    // Evita reutilizar una versión antigua del aviso guardada en caché.
+    const respuesta = await fetch("./mensaje.json?v=" + Date.now(), { cache: "no-store" });
+    if (!respuesta.ok) return;
+    const aviso = await respuesta.json();
+    const texto = typeof aviso.mensaje === "string" ? aviso.mensaje.trim() : "";
+    if (!texto) return;
+
+    if (typeof aviso.titulo === "string" && aviso.titulo.trim()) {
+      titulo.textContent = aviso.titulo.trim();
+    }
+    contenido.textContent = texto;
+    fondo.classList.add("visible");
+    fondo.setAttribute("aria-hidden", "false");
+
+    function cerrarPopup() {
+      fondo.classList.remove("visible");
+      fondo.setAttribute("aria-hidden", "true");
+    }
+    cerrar.addEventListener("click", cerrarPopup);
+    fondo.addEventListener("click", function (evento) {
+      if (evento.target === fondo) cerrarPopup();
+    });
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape") cerrarPopup();
+    });
+  } catch (error) {
+    // Si el archivo no está disponible, la aplicación sigue funcionando normalmente.
+    console.warn("No se pudo cargar mensaje.json; se omite el aviso.", error);
+  }
 })();
 </script>
 
