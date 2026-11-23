@@ -1268,12 +1268,82 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       font-weight: 900;
       letter-spacing: .2px;
     }
-    .navidad-etiqueta.visible { display: block; }
+    .navidad-etiqueta.visible { display: none; }
     body[data-theme="dark"] .navidad-etiqueta {
       background: #193326; border-color: #2c6a45; color: #8be0a7;
     }
     body[data-theme="pink"] .navidad-etiqueta {
       background: #fff0f5; border-color: #e8a8c4; color: #a33e68;
+    }
+
+
+
+    /* ===== EDICIÓN NAVIDEÑA ROJA PARA PRECIO OAI / SUPER OAI ===== */
+    .oai-card.navidad-oai-card,
+    .oai-card.super-oai-card.navidad-oai-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #a91524 0%, #c92332 52%, #86101d 100%) !important;
+      border: 2px solid #f0cf78 !important;
+      box-shadow: 0 5px 18px rgba(139, 16, 29, .30), inset 0 0 0 1px rgba(255,255,255,.12) !important;
+    }
+    .oai-card.navidad-oai-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 5px;
+      background: repeating-linear-gradient(90deg, #f2d17b 0 18px, #fff4d6 18px 30px, #187344 30px 48px);
+    }
+    .oai-card.navidad-oai-card::after {
+      content: "✦  ✧  ✦";
+      position: absolute;
+      top: 12px;
+      right: 13px;
+      color: #ffe9ad;
+      font-size: 13px;
+      letter-spacing: 3px;
+      opacity: .95;
+      pointer-events: none;
+    }
+    .oai-card.navidad-oai-card .etiqueta,
+    .oai-card.navidad-oai-card .oai-valor,
+    body[data-theme="dark"] .oai-card.navidad-oai-card .etiqueta,
+    body[data-theme="dark"] .oai-card.navidad-oai-card .oai-valor,
+    body[data-theme="pink"] .oai-card.navidad-oai-card .etiqueta,
+    body[data-theme="pink"] .oai-card.navidad-oai-card .oai-valor {
+      color: #fffdf2 !important;
+    }
+    .oai-card.navidad-oai-card .etiqueta {
+      letter-spacing: .8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,.2);
+    }
+    .oai-card.navidad-oai-card .oai-valor {
+      text-shadow: 0 2px 8px rgba(0,0,0,.24);
+    }
+    .navidad-oai-sello {
+      display: none;
+      width: fit-content;
+      max-width: 100%;
+      margin: 10px auto 0;
+      padding: 6px 11px;
+      border: 1px solid rgba(255, 224, 145, .75);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #8f1420, #b91f2c);
+      color: #fff9e8;
+      font-size: 10px;
+      line-height: 1.25;
+      font-weight: 900;
+      letter-spacing: .45px;
+      box-shadow: 0 2px 7px rgba(0,0,0,.18);
+    }
+    .oai-card.navidad-oai-card .navidad-oai-sello { display: block; }
+    @keyframes navidadBrillo {
+      0%, 100% { box-shadow: 0 5px 18px rgba(139,16,29,.30), inset 0 0 0 1px rgba(255,255,255,.12); }
+      45% { box-shadow: 0 5px 23px rgba(240,207,120,.55), inset 0 0 0 1px rgba(255,255,255,.22); }
+    }
+    .oai-card.navidad-oai-card.navidad-destello { animation: navidadBrillo 1.5s ease-in-out; }
+    @media(prefers-reduced-motion:reduce) {
+      .oai-card.navidad-oai-card.navidad-destello { animation: none; }
     }
 
 </style>
@@ -1361,6 +1431,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         class="oai-valor"
         id="precioOAI"
       ></div>
+      <div class="navidad-oai-sello" id="navidadOaiSello">🎄 ESTE PRODUCTO SUMA PARA LA CAMPAÑA DE NAVIDAD 🎄</div>
     </div>
 
     <div class="tarjeta barras-card">
@@ -1841,6 +1912,19 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     /* Armónicos suaves para darle ese brillo/chispa */
     tono(2637.02, 0.18, 0.12, 0.058, "sine");
     tono(3135.96, 0.18, 0.20, 0.051, "sine");
+  }
+
+
+  function sonidoNavidad() {
+    /* Tintineo corto de cascabeles, creado con tonos del navegador */
+    tono(1567.98, 0.34, 0.00, 0.12, "sine");
+    tono(2093.00, 0.30, 0.075, 0.105, "sine");
+    tono(2637.02, 0.27, 0.16, 0.09, "sine");
+    tono(2093.00, 0.30, 0.29, 0.085, "sine");
+    tono(1567.98, 0.38, 0.42, 0.10, "sine");
+    /* Armónicos agudos muy suaves para dar sensación metálica */
+    tono(3135.96, 0.20, 0.04, 0.025, "sine");
+    tono(4186.01, 0.18, 0.20, 0.022, "sine");
   }
 
 
@@ -2499,22 +2583,21 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         formatearPrecio(precioOAI);
 
       if (esSuperOAI) {
-        oaiEtiqueta.textContent = "✨ SUPER OAI ✨";
+        oaiEtiqueta.textContent = sumaNavidad ? "🎄 SUPER OAI · SUMA PARA NAVIDAD" : "✨ SUPER OAI ✨";
         oaiCard.classList.add("super-oai-card");
       } else {
-        oaiEtiqueta.textContent = "Precio OAI";
+        oaiEtiqueta.textContent = sumaNavidad ? "🎄 PRECIO OAI · SUMA PARA NAVIDAD" : "Precio OAI";
         oaiCard.classList.remove("super-oai-card");
       }
 
-      oaiCard.classList.remove(
-        "oculto"
-      );
+      oaiCard.classList.toggle("navidad-oai-card", sumaNavidad);
+      oaiCard.classList.remove("oculto");
 
     } else {
 
       oaiValor.textContent = "";
       oaiEtiqueta.textContent = "Precio OAI";
-      oaiCard.classList.remove("super-oai-card");
+      oaiCard.classList.remove("super-oai-card", "navidad-oai-card", "navidad-destello");
 
       oaiCard.classList.add(
         "oculto"
@@ -2523,14 +2606,22 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     }
 
 
-    /* Sonido del resultado: solo uno según el tipo de producto */
-    if (esSuperOAI && precioOAI !== undefined && precioOAI !== null &&
-        String(precioOAI).trim() !== "") {
+    /* Sonido del resultado: NAVIDAD tiene prioridad si el producto suma */
+    const tienePrecioOAI = precioOAI !== undefined && precioOAI !== null &&
+      String(precioOAI).trim() !== "";
+    if (sumaNavidad && tienePrecioOAI) {
+      sonidoNavidad();
+      vibrar(esSuperOAI ? [45,30,45,30,90] : [45,35,75]);
+      if (esSuperOAI) animarSuperOAI();
+      oaiCard.classList.remove("navidad-destello");
+      void oaiCard.offsetWidth;
+      oaiCard.classList.add("navidad-destello");
+      setTimeout(() => oaiCard.classList.remove("navidad-destello"), 1550);
+    } else if (esSuperOAI && tienePrecioOAI) {
       sonidoSuperOAI();
       vibrar([45,35,45,35,90]);
       animarSuperOAI();
-    } else if (precioOAI !== undefined && precioOAI !== null &&
-               String(precioOAI).trim() !== "") {
+    } else if (tienePrecioOAI) {
       sonidoOAI();
       vibrar([45,40,75]);
     } else {
