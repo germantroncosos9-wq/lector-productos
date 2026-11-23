@@ -1254,6 +1254,28 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     body[data-theme="dark"] .popup-aviso { background: #1b2420; color: #f2f7f4; }
     body[data-theme="pink"] .popup-aviso h2 { color: #b95784; }
 
+    /* ===== PRODUCTO QUE SUMA PARA NAVIDAD ===== */
+    .navidad-etiqueta {
+      display: none;
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: #e8f7ed;
+      border: 1px solid #8bc99e;
+      color: #176b36;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .navidad-etiqueta.visible { display: block; }
+    body[data-theme="dark"] .navidad-etiqueta {
+      background: #193326; border-color: #2c6a45; color: #8be0a7;
+    }
+    body[data-theme="pink"] .navidad-etiqueta {
+      background: #fff0f5; border-color: #e8a8c4; color: #a33e68;
+    }
+
 </style>
   <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
 
@@ -1316,6 +1338,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         class="descriptor"
         id="descriptor"
       ></div>
+    </div>
+
+    <div id="navidadEtiqueta" class="navidad-etiqueta" aria-live="polite">
+      🎄 ESTE PRODUCTO SUMA PARA NAVIDAD
     </div>
 
     <div class="tarjeta precio-card">
@@ -1886,6 +1912,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   const DB_NAME = "LectorProductosDB";
   const DB_VERSION = 4;
   const STORE_NAME = "productos";
+  const VERSION_CHECK_KEY = "lectorProductosUltimaRevisionVersion";
+  const VERSION_VALUE_KEY = "lectorProductosVersionBase";
+  const VERSION_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
 
   let productos = [];
   let indice = {};
@@ -2412,6 +2441,17 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     ).textContent =
       producto["DESCRIPTOR"] || "";
 
+    /* Marca NAVIDAD de forma independiente a SUPER OAI */
+    const valorNavidad = String(producto["NAVIDAD"] || "")
+      .trim()
+      .toUpperCase();
+    const sumaNavidad = valorNavidad !== "" &&
+      !["NO", "N", "0", "FALSE", "FALSO", "NO SUMA"].includes(valorNavidad);
+    const etiquetaNavidad = document.getElementById("navidadEtiqueta");
+    if (etiquetaNavidad) {
+      etiquetaNavidad.classList.toggle("visible", sumaNavidad);
+    }
+
 
     /* Precio */
 
@@ -2644,8 +2684,69 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     setTimeout(()=>caja?.classList.add("oculto"),1300);
   }
 
-  function actualizarProductos() {
+  /*
+    Comprueba la versión de la hoja como máximo una vez cada 24 horas
+    por dispositivo. Solo descarga la base completa si detecta cambios.
+  */
+  function comprobarActualizacionAutomatica() {
+    let ultimaRevision = 0;
+    try {
+      ultimaRevision = Number(localStorage.getItem(VERSION_CHECK_KEY) || 0);
+    } catch (e) {}
 
+    if (Date.now() - ultimaRevision < VERSION_CHECK_INTERVAL) return;
+
+    const callbackName = "callbackVersion_" + Date.now();
+    const script = document.createElement("script");
+    let finalizado = false;
+
+    function limpiar() {
+      if (finalizado) return;
+      finalizado = true;
+      script.remove();
+      delete window[callbackName];
+    }
+
+    window[callbackName] = function(data) {
+      try {
+        if (!data || !data.version) return;
+
+        const versionRemota = String(data.version);
+        let versionGuardada = "";
+        try {
+          versionGuardada = localStorage.getItem(VERSION_VALUE_KEY) || "";
+        } catch (e) {}
+
+        // Si aún no hay base local, o la versión cambió, descargar productos.
+        // La fecha de revisión se guarda solo si todo está al día o tras una descarga exitosa.
+        if (!productos.length || versionRemota !== versionGuardada) {
+          actualizarProductos({ automatico: true });
+        } else {
+          try {
+            localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
+          } catch (e) {}
+        }
+      } catch (error) {
+        console.warn("No se pudo comprobar la versión de productos:", error);
+      } finally {
+        limpiar();
+      }
+    };
+
+    script.id = callbackName;
+    script.src = API_URL + "?accion=version&callback=" +
+      encodeURIComponent(callbackName) + "&t=" + Date.now();
+    script.onerror = function() {
+      limpiar();
+      // Si falla la conexión, se volverá a intentar en la próxima apertura.
+    };
+    document.body.appendChild(script);
+  }
+
+
+  function actualizarProductos(opciones = {}) {
+
+    const automatico = opciones.automatico === true;
     const btnActualizar = document.getElementById("btnActualizarProductos");
     if (btnActualizar?.disabled) return;
     if (btnActualizar) {
@@ -2663,8 +2764,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     mensaje.className =
       "mensaje cargando";
 
-    mensaje.textContent =
-      "⏳ Actualizando productos...";
+    mensaje.textContent = automatico
+      ? "🔄 Se detectaron cambios. Actualizando productos…"
+      : "⏳ Actualizando productos...";
 
     const callbackName =
       "callbackProductos_" +
@@ -2705,11 +2807,20 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
                 new Date().toISOString()
               );
 
+              // Guardar la versión recibida para evitar descargas innecesarias.
+              try {
+                if (data.version) {
+                  localStorage.setItem(VERSION_VALUE_KEY, String(data.version));
+                  localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
+                }
+              } catch (e) {}
+
               mensaje.className =
                 "mensaje";
 
-              mensaje.textContent =
-                "✅ Productos actualizados correctamente.";
+              mensaje.textContent = automatico
+                ? "✅ Productos actualizados automáticamente."
+                : "✅ Productos actualizados correctamente.";
 
               estadoProgresoActualizacion("completo","✅ Actualización completada.");
               if (btnActualizar) {
@@ -3462,6 +3573,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
           "📥 Presiona ACTUALIZAR PRODUCTOS para cargar la base.";
 
       }
+
+      // La comprobación es ligera y no bloquea el uso de la base local.
+      comprobarActualizacionAutomatica();
 
     } catch (error) {
 
