@@ -1258,23 +1258,18 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     .navidad-etiqueta {
       display: none;
       margin: 0 0 12px;
-      padding: 10px 14px;
+      padding: 11px 14px;
       border-radius: 12px;
-      background: #e8f7ed;
-      border: 1px solid #8bc99e;
-      color: #176b36;
+      background: linear-gradient(135deg, #a91524, #c92332 55%, #86101d);
+      border: 2px solid #f0cf78;
+      color: #fff9e8;
       text-align: center;
       font-size: 14px;
       font-weight: 900;
       letter-spacing: .2px;
+      box-shadow: 0 4px 14px rgba(139, 16, 29, .24);
     }
-    .navidad-etiqueta.visible { display: none; }
-    body[data-theme="dark"] .navidad-etiqueta {
-      background: #193326; border-color: #2c6a45; color: #8be0a7;
-    }
-    body[data-theme="pink"] .navidad-etiqueta {
-      background: #fff0f5; border-color: #e8a8c4; color: #a33e68;
-    }
+    .navidad-etiqueta.visible { display: block; }
 
 
 
@@ -2525,16 +2520,17 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     ).textContent =
       producto["DESCRIPTOR"] || "";
 
-    /* Marca NAVIDAD de forma independiente a SUPER OAI */
-    const valorNavidad = String(producto["NAVIDAD"] || "")
+    /* Marca NAVIDAD de forma independiente a SUPER OAI.
+       Se normaliza el nombre de la columna por si la hoja trae espacios. */
+    const claveNavidad = Object.keys(producto).find(
+      clave => clave.trim().toUpperCase() === "NAVIDAD"
+    );
+    const valorNavidad = String(claveNavidad ? producto[claveNavidad] : "")
       .trim()
       .toUpperCase();
     const sumaNavidad = valorNavidad !== "" &&
       !["NO", "N", "0", "FALSE", "FALSO", "NO SUMA"].includes(valorNavidad);
     const etiquetaNavidad = document.getElementById("navidadEtiqueta");
-    if (etiquetaNavidad) {
-      etiquetaNavidad.classList.toggle("visible", sumaNavidad);
-    }
 
 
     /* Precio */
@@ -2609,6 +2605,11 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     /* Sonido del resultado: NAVIDAD tiene prioridad si el producto suma */
     const tienePrecioOAI = precioOAI !== undefined && precioOAI !== null &&
       String(precioOAI).trim() !== "";
+    /* Si tiene OAI, el aviso va dentro de la tarjeta roja.
+       Si no tiene OAI, mostramos el aviso navideño independiente. */
+    if (etiquetaNavidad) {
+      etiquetaNavidad.classList.toggle("visible", sumaNavidad && !tienePrecioOAI);
+    }
     if (sumaNavidad && tienePrecioOAI) {
       sonidoNavidad();
       vibrar(esSuperOAI ? [45,30,45,30,90] : [45,35,75]);
