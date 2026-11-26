@@ -2865,10 +2865,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       const callbackName = "callbackVersion_" + Date.now() + "_" + Math.random().toString(36).slice(2);
       const script = document.createElement("script");
       let finalizado = false;
+      const temporizador = setTimeout(() => limpiar(null), 8000);
 
       function limpiar(resultado) {
         if (finalizado) return;
         finalizado = true;
+        clearTimeout(temporizador);
         script.remove();
         delete window[callbackName];
         resolve(resultado || null);
@@ -2891,7 +2893,14 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   }
 
   function aplicarVersionRemota(versionRemota) {
-    if (!versionRemota) return;
+    const mensajeEstado = document.getElementById("mensaje");
+    if (!versionRemota) {
+      if (productos.length && mensajeEstado && !mensajeEstado.textContent.includes("actualizando")) {
+        mensajeEstado.className = "mensaje";
+        mensajeEstado.textContent = "✅ Productos locales listos. No se pudo verificar novedades; puedes seguir buscando.";
+      }
+      return;
+    }
 
     let versionGuardada = "";
     try {
@@ -2905,6 +2914,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       try {
         localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
       } catch (e) {}
+      if (mensajeEstado && productos.length) {
+        mensajeEstado.className = "mensaje";
+        mensajeEstado.textContent = "✅ Productos listos y verificados. Puedes escanear.";
+      }
     }
   }
 
@@ -3731,7 +3744,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         document.getElementById(
           "mensaje"
         ).textContent =
-          "✅ Productos disponibles. Puedes escanear.";
+          "✅ Productos disponibles. Verificando novedades en segundo plano… Puedes escanear.";
 
       } else {
 
