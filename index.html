@@ -2859,53 +2859,54 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     CONFIG/avisos se consultan por separado y no provocan una descarga de productos.
   */
   function comprobarActualizacionAutomatica() {
-    const callbackName = "callbackVersion_" + Date.now();
-    const script = document.createElement("script");
-    let finalizado = false;
+    // Inicia la consulta de versión inmediatamente y devuelve el resultado para
+    // que el inicio de la app pueda cargar la base local en paralelo.
+    return new Promise((resolve) => {
+      const callbackName = "callbackVersion_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+      const script = document.createElement("script");
+      let finalizado = false;
 
-    function limpiar() {
-      if (finalizado) return;
-      finalizado = true;
-      script.remove();
-      delete window[callbackName];
-    }
-
-    window[callbackName] = function(data) {
-      try {
-        if (!data || !data.version) return;
-
-        const versionRemota = String(data.version);
-        let versionGuardada = "";
-        try {
-          versionGuardada = localStorage.getItem(VERSION_VALUE_KEY) || "";
-        } catch (e) {}
-
-        // Si aún no hay base local, o la versión cambió, descargar productos.
-        // La fecha de revisión se guarda solo si todo está al día o tras una descarga exitosa.
-        if (!productos.length || versionRemota !== versionGuardada) {
-          actualizarProductos({ automatico: true });
-        } else {
-          try {
-            localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
-          } catch (e) {}
-        }
-      } catch (error) {
-        console.warn("No se pudo comprobar la versión de productos:", error);
-      } finally {
-        limpiar();
+      function limpiar(resultado) {
+        if (finalizado) return;
+        finalizado = true;
+        script.remove();
+        delete window[callbackName];
+        resolve(resultado || null);
       }
-    };
 
-    script.id = callbackName;
-    script.src = API_URL + "?accion=version&callback=" +
-      encodeURIComponent(callbackName) + "&t=" + Date.now();
-    script.onerror = function() {
-      limpiar();
-      // Si falla la conexión, se volverá a intentar en la próxima apertura.
-    };
-    document.body.appendChild(script);
+      window[callbackName] = function(data) {
+        if (data && data.version) {
+          limpiar(String(data.version));
+        } else {
+          limpiar(null);
+        }
+      };
+
+      script.id = callbackName;
+      script.src = API_URL + "?accion=version&callback=" +
+        encodeURIComponent(callbackName) + "&t=" + Date.now();
+      script.onerror = function() { limpiar(null); };
+      document.head.appendChild(script);
+    });
   }
 
+  function aplicarVersionRemota(versionRemota) {
+    if (!versionRemota) return;
+
+    let versionGuardada = "";
+    try {
+      versionGuardada = localStorage.getItem(VERSION_VALUE_KEY) || "";
+    } catch (e) {}
+
+    // Descarga si no hay base local o la huella cambió.
+    if (!productos.length || versionRemota !== versionGuardada) {
+      actualizarProductos({ automatico: true });
+    } else {
+      try {
+        localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
+      } catch (e) {}
+    }
+  }
 
   function actualizarProductos(opciones = {}) {
 
@@ -3700,6 +3701,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
   async function iniciar() {
 
+    // Dispara la comprobación de versión apenas comienza a ejecutarse el inicio,
+    // en paralelo con la apertura de IndexedDB y la carga de productos locales.
+    const consultaVersion = comprobarActualizacionAutomatica();
+
     try {
 
       await abrirDB();
@@ -3737,8 +3742,9 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       }
 
-      // La comprobación es ligera y no bloquea el uso de la base local.
-      comprobarActualizacionAutomatica();
+      // Al terminar de cargar la base local, procesamos el resultado de la
+      // consulta que ya se inició al entrar (sin esperar para mostrar el lector).
+      consultaVersion.then(aplicarVersionRemota);
 
     } catch (error) {
 
