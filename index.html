@@ -2865,12 +2865,10 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
       const callbackName = "callbackVersion_" + Date.now() + "_" + Math.random().toString(36).slice(2);
       const script = document.createElement("script");
       let finalizado = false;
-      const temporizador = setTimeout(() => limpiar(null), 8000);
 
       function limpiar(resultado) {
         if (finalizado) return;
         finalizado = true;
-        clearTimeout(temporizador);
         script.remove();
         delete window[callbackName];
         resolve(resultado || null);
