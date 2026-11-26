@@ -2060,7 +2060,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   const STORE_NAME = "productos";
   const VERSION_CHECK_KEY = "lectorProductosUltimaRevisionVersion";
   const VERSION_VALUE_KEY = "lectorProductosVersionBase";
-  const VERSION_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
 
   let productos = [];
   let indice = {};
@@ -2855,17 +2854,11 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   }
 
   /*
-    Comprueba la versión de la hoja como máximo una vez cada 24 horas
-    por dispositivo. Solo descarga la base completa si detecta cambios.
+    Comprueba la huella de Productos cada vez que se abre la aplicación.
+    Solo descarga la base completa si no existe una base local o si la huella cambió.
+    CONFIG/avisos se consultan por separado y no provocan una descarga de productos.
   */
   function comprobarActualizacionAutomatica() {
-    let ultimaRevision = 0;
-    try {
-      ultimaRevision = Number(localStorage.getItem(VERSION_CHECK_KEY) || 0);
-    } catch (e) {}
-
-    if (Date.now() - ultimaRevision < VERSION_CHECK_INTERVAL) return;
-
     const callbackName = "callbackVersion_" + Date.now();
     const script = document.createElement("script");
     let finalizado = false;
