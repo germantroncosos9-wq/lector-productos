@@ -1494,16 +1494,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     <span>Tu listado lleva 14 días o más sin actualizarse. Pueden existir productos nuevos o cambios en la información.</span>
   </div>
 
-  <div class="actualizar-secundario-wrap">
-    <button
-      id="btnActualizarProductos"
-      class="btn-actualizar btn-actualizar-secundario"
-      onclick="actualizarProductos()"
-    >
-      ↻ Actualizar productos
-    </button>
-  </div>
-
   <div id="progresoActualizacion" class="progreso-actualizacion oculto" aria-live="polite">
     <div class="progreso-texto" id="progresoTexto">Preparando actualización…</div>
     <div class="progreso-pista">
@@ -1564,6 +1554,16 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   </div>
 
   <button id="btnListas" class="listas-btn-principal" type="button">📋 LISTAS</button>
+
+  <div class="actualizar-secundario-wrap" style="margin-top:18px; margin-bottom:24px;">
+    <button
+      id="btnActualizarProductos"
+      class="btn-actualizar btn-actualizar-secundario"
+      onclick="actualizarProductos()"
+    >
+      ↻ Actualizar productos
+    </button>
+  </div>
 
   <div id="listasVista" class="listas-vista">
     <div class="listas-panel">
@@ -1788,12 +1788,19 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     }
     const interno = String(p["CODIGO INTERNO"] || "").trim();
     const existente = l.items.find(i => i.codigoInterno === interno);
-    if(existente) existente.cantidad += 1;
-    else l.items.push({
-      codigoInterno: interno,
-      descriptor: String(p["DESCRIPTOR"] || "").trim(),
-      cantidad: 1
-    });
+    if(existente) {
+      existente.cantidad += 1;
+      // Si ya estaba en la lista, también lo llevamos al primer lugar.
+      l.items = l.items.filter(i => i !== existente);
+      l.items.unshift(existente);
+    } else {
+      // El producto recién agregado queda al inicio de la lista.
+      l.items.unshift({
+        codigoInterno: interno,
+        descriptor: String(p["DESCRIPTOR"] || "").trim(),
+        cantidad: 1
+      });
+    }
     guardarListasPersonalizadas();
     msg.textContent = existente ? `✓ ${interno} · cantidad ${existente.cantidad}` : `✓ ${interno} agregado`;
     sonidoNormal(); vibrar(45);
