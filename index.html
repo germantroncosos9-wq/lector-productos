@@ -1494,6 +1494,16 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     <span>Tu listado lleva 14 días o más sin actualizarse. Pueden existir productos nuevos o cambios en la información.</span>
   </div>
 
+  <div class="actualizar-secundario-wrap">
+    <button
+      id="btnActualizarProductos"
+      class="btn-actualizar btn-actualizar-secundario"
+      onclick="actualizarProductos()"
+    >
+      ↻ Actualizar productos
+    </button>
+  </div>
+
   <div id="progresoActualizacion" class="progreso-actualizacion oculto" aria-live="polite">
     <div class="progreso-texto" id="progresoTexto">Preparando actualización…</div>
     <div class="progreso-pista">
@@ -1554,16 +1564,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   </div>
 
   <button id="btnListas" class="listas-btn-principal" type="button">📋 LISTAS</button>
-
-  <div class="actualizar-secundario-wrap" style="margin-top:18px; margin-bottom:24px;">
-    <button
-      id="btnActualizarProductos"
-      class="btn-actualizar btn-actualizar-secundario"
-      onclick="actualizarProductos()"
-    >
-      ↻ Actualizar productos
-    </button>
-  </div>
 
   <div id="listasVista" class="listas-vista">
     <div class="listas-panel">
@@ -1788,19 +1788,12 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
     }
     const interno = String(p["CODIGO INTERNO"] || "").trim();
     const existente = l.items.find(i => i.codigoInterno === interno);
-    if(existente) {
-      existente.cantidad += 1;
-      // Si ya estaba en la lista, también lo llevamos al primer lugar.
-      l.items = l.items.filter(i => i !== existente);
-      l.items.unshift(existente);
-    } else {
-      // El producto recién agregado queda al inicio de la lista.
-      l.items.unshift({
-        codigoInterno: interno,
-        descriptor: String(p["DESCRIPTOR"] || "").trim(),
-        cantidad: 1
-      });
-    }
+    if(existente) existente.cantidad += 1;
+    else l.items.push({
+      codigoInterno: interno,
+      descriptor: String(p["DESCRIPTOR"] || "").trim(),
+      cantidad: 1
+    });
     guardarListasPersonalizadas();
     msg.textContent = existente ? `✓ ${interno} · cantidad ${existente.cantidad}` : `✓ ${interno} agregado`;
     sonidoNormal(); vibrar(45);
@@ -2071,9 +2064,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   let productos = [];
   let indice = {};
   let db = null;
-  let actualizacionEnCurso = false;
-  let verificacionEnCurso = false;
-  let temporizadorVerificacion = null;
 
 
   /* =========================================================
@@ -2150,7 +2140,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
      GUARDAR PRODUCTOS EN INDEXEDDB
   ========================================================= */
 
-  function guardarProductos(listaProductos = productos) {
+  function guardarProductos() {
 
     return new Promise((resolve, reject) => {
 
@@ -2165,7 +2155,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       store.put({
         id: "base",
-        productos: listaProductos,
+        productos: productos,
         fecha: new Date().toISOString()
       });
 
@@ -2319,46 +2309,57 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   ========================================================= */
 
   function construirIndice() {
-    indice = construirIndiceDesdeLista(productos);
-  }
 
-  // Construye el índice en lotes pequeños. Así el navegador puede seguir
-  // atendiendo la cámara, los botones y las búsquedas durante una actualización.
-  function construirIndiceDesdeLista(lista) {
-    return new Promise((resolve) => {
-      const nuevoIndice = {};
-      let posicion = 0;
-      const tamanoLote = 1200;
+    indice = {};
 
-      function procesarLote() {
-        const limite = Math.min(posicion + tamanoLote, lista.length);
+    for (let i = 0; i < productos.length; i++) {
 
-        for (; posicion < limite; posicion++) {
-          const producto = lista[posicion];
-          const barras = String(producto["BARRAS"] || "");
-          if (!barras.trim()) continue;
+      const producto = productos[i];
 
-          const codigos = barras.split(/[ ,\n;/]+/);
-          for (let j = 0; j < codigos.length; j++) {
-            const codigo = normalizarCodigo(codigos[j]);
-            if (!codigo) continue;
-            nuevoIndice[codigo] = producto;
-            const canonico = codigoCanonico(codigo);
-            if (canonico && !nuevoIndice[canonico]) {
-              nuevoIndice[canonico] = producto;
-            }
-          }
-        }
+      const barras =
+        String(producto["BARRAS"] || "");
 
-        if (posicion < lista.length) {
-          setTimeout(procesarLote, 0);
-        } else {
-          resolve(nuevoIndice);
-        }
+      if (!barras.trim()) {
+        continue;
       }
 
-      procesarLote();
-    });
+      const codigos =
+        barras.split(/[,\n;/]+/);
+
+      for (let j = 0; j < codigos.length; j++) {
+
+        const codigo =
+          normalizarCodigo(codigos[j]);
+
+        if (!codigo) {
+          continue;
+        }
+
+        /*
+          Primero guardamos el código EXACTO.
+          Esto hace que, si existe un producto con ese
+          código exacto, tenga prioridad.
+        */
+        indice[codigo] = producto;
+
+        /*
+          Después guardamos la versión canónica.
+          Así se ignoran los ceros agregados al principio.
+        */
+        const canonico =
+          codigoCanonico(codigo);
+
+        if (
+          canonico &&
+          !indice[canonico]
+        ) {
+          indice[canonico] = producto;
+        }
+
+      }
+
+    }
+
   }
 
   /* =========================================================
@@ -2853,173 +2854,233 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   }
 
   /*
-    Comprueba la huella de Productos cada vez que se abre la aplicación.
-    Solo descarga la base completa si no existe una base local o si la huella cambió.
-    CONFIG/avisos se consultan por separado y no provocan una descarga de productos.
+    Comprueba la versión en CADA apertura de la página.
+    La consulta de versión es ligera; solo descarga la base completa
+    cuando el marcador remoto cambia o no hay base local.
   */
   function comprobarActualizacionAutomatica() {
-    if (verificacionEnCurso) return Promise.resolve(null);
-    verificacionEnCurso = true;
 
-    return new Promise((resolve) => {
-      const callbackName = "callbackVersion_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-      const script = document.createElement("script");
-      let finalizado = false;
-      const timeout = setTimeout(() => limpiar(null), 12000);
+    const callbackName = "callbackVersion_" + Date.now();
+    const script = document.createElement("script");
+    let finalizado = false;
 
-      function limpiar(resultado) {
-        if (finalizado) return;
-        finalizado = true;
-        clearTimeout(timeout);
-        script.remove();
-        delete window[callbackName];
-        verificacionEnCurso = false;
-        resolve(resultado || null);
-      }
-
-      window[callbackName] = function(data) {
-        limpiar(data && data.version ? String(data.version) : null);
-      };
-
-      script.id = callbackName;
-      script.src = API_URL + "?accion=version&callback=" +
-        encodeURIComponent(callbackName) + "&t=" + Date.now();
-      script.onerror = function() { limpiar(null); };
-      document.head.appendChild(script);
-    });
-  }
-
-  function aplicarVersionRemota(versionRemota) {
-    const mensajeEstado = document.getElementById("mensaje");
-    if (!versionRemota) {
-      if (productos.length && mensajeEstado && !actualizacionEnCurso) {
-        mensajeEstado.className = "mensaje";
-        mensajeEstado.textContent = "✅ Productos locales listos. No se pudo verificar novedades; puedes seguir buscando.";
-      }
-      return;
+    function limpiar() {
+      if (finalizado) return;
+      finalizado = true;
+      script.remove();
+      delete window[callbackName];
     }
 
-    let versionGuardada = "";
-    try { versionGuardada = localStorage.getItem(VERSION_VALUE_KEY) || ""; } catch (e) {}
+    window[callbackName] = function(data) {
+      try {
+        if (!data || !data.version) return;
 
-    if (!productos.length || versionRemota !== versionGuardada) {
-      actualizarProductos({ automatico: true });
-    } else {
-      try { localStorage.setItem(VERSION_CHECK_KEY, String(Date.now())); } catch (e) {}
-      if (mensajeEstado && productos.length && !actualizacionEnCurso) {
-        mensajeEstado.className = "mensaje";
-        mensajeEstado.textContent = "✅ Productos listos y verificados. Puedes escanear.";
+        const versionRemota = String(data.version);
+        let versionGuardada = "";
+        try {
+          versionGuardada = localStorage.getItem(VERSION_VALUE_KEY) || "";
+        } catch (e) {}
+
+        // Si aún no hay base local, o la versión cambió, descargar productos.
+        // La fecha de revisión se guarda solo si todo está al día o tras una descarga exitosa.
+        if (!productos.length || versionRemota !== versionGuardada) {
+          actualizarProductos({ automatico: true });
+        } else {
+          try {
+            localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
+          } catch (e) {}
+        }
+      } catch (error) {
+        console.warn("No se pudo comprobar la versión de productos:", error);
+      } finally {
+        limpiar();
       }
-    }
+    };
+
+    script.id = callbackName;
+    script.src = API_URL + "?accion=version&callback=" +
+      encodeURIComponent(callbackName) + "&t=" + Date.now();
+    script.onerror = function() {
+      limpiar();
+      // Si falla la conexión, se volverá a intentar en la próxima apertura.
+    };
+    document.body.appendChild(script);
   }
+
 
   function actualizarProductos(opciones = {}) {
-    const automatico = opciones.automatico === true;
-    if (actualizacionEnCurso) return;
-    actualizacionEnCurso = true;
 
+    const automatico = opciones.automatico === true;
     const btnActualizar = document.getElementById("btnActualizarProductos");
+    if (btnActualizar?.disabled) return;
     if (btnActualizar) {
       btnActualizar.disabled = true;
       btnActualizar.textContent = "↻ Actualizando…";
     }
 
-    const mensaje = document.getElementById("mensaje");
-    estadoProgresoActualizacion("descargando", "Descargando listado de productos…");
-    if (mensaje) {
-      mensaje.className = productos.length ? "mensaje" : "mensaje cargando";
-      mensaje.textContent = automatico
-        ? (productos.length ? "🔄 Actualizando en segundo plano. Puedes seguir escaneando…" : "🔄 Se detectaron cambios. Descargando productos…")
-        : "⏳ Actualizando productos...";
-    }
+    estadoProgresoActualizacion("descargando","Descargando listado de productos…");
 
-    const callbackName = "callbackProductos_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-    const script = document.createElement("script");
-    script.id = callbackName;
-    let finalizado = false;
-    const timeout = setTimeout(() => finalizarError("La descarga está tardando demasiado. Puedes seguir usando los productos guardados e intentar actualizar más tarde."), 120000);
+    const mensaje =
+      document.getElementById(
+        "mensaje"
+      );
 
-    function limpiarSolicitud() {
-      if (finalizado) return false;
-      finalizado = true;
-      clearTimeout(timeout);
-      script.remove();
-      delete window[callbackName];
-      return true;
-    }
+    mensaje.className =
+      "mensaje cargando";
 
-    function liberarInterfaz() {
-      actualizacionEnCurso = false;
-      if (btnActualizar) {
-        btnActualizar.disabled = false;
-        btnActualizar.textContent = "↻ Actualizar productos";
-      }
-    }
+    mensaje.textContent = automatico
+      ? "🔄 Se detectaron cambios. Actualizando productos…"
+      : "⏳ Actualizando productos...";
 
-    function finalizarError(texto) {
-      if (!limpiarSolicitud()) return;
-      liberarInterfaz();
-      if (mensaje) {
-        mensaje.className = productos.length ? "mensaje" : "mensaje error";
-        mensaje.textContent = productos.length
-          ? "⚠️ " + texto + " La base anterior sigue disponible."
-          : "❌ " + texto;
-      }
-      terminarProgresoActualizacion();
-    }
+    const callbackName =
+      "callbackProductos_" +
+      Date.now();
 
-    window[callbackName] = async function(data) {
-      if (finalizado) return;
-      clearTimeout(timeout);
-      try {
-        if (!data || !Array.isArray(data.productos)) {
-          throw new Error("Respuesta inválida del servidor");
-        }
 
-        estadoProgresoActualizacion("procesando", "Preparando la nueva base sin interrumpir el lector…");
-        const productosNuevos = data.productos;
-        const indiceNuevo = await construirIndiceDesdeLista(productosNuevos);
-
-        estadoProgresoActualizacion("procesando", "Guardando la nueva base en el dispositivo…");
-        await guardarProductos(productosNuevos);
-
-        // Solo después de guardar correctamente, cambiamos la base activa.
-        productos = productosNuevos;
-        indice = indiceNuevo;
-        mostrarAvisoBase(data.mensaje);
-        mostrarCantidad();
-        mostrarFecha(new Date().toISOString());
+    window[callbackName] =
+      function(data) {
 
         try {
-          if (data.version) {
-            localStorage.setItem(VERSION_VALUE_KEY, String(data.version));
-            localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
-          }
-        } catch (e) {}
 
-        if (mensaje) {
-          mensaje.className = "mensaje";
-          mensaje.textContent = automatico
-            ? "✅ Productos actualizados. Puedes seguir escaneando."
-            : "✅ Productos actualizados correctamente.";
+          if (
+            !data ||
+            !Array.isArray(data.productos)
+          ) {
+
+            throw new Error(
+              "Respuesta inválida"
+            );
+
+          }
+
+          estadoProgresoActualizacion("procesando","Procesando y guardando productos…");
+
+          productos =
+            data.productos;
+
+          mostrarAvisoBase(data.mensaje);
+
+          construirIndice();
+
+          mostrarCantidad();
+
+          guardarProductos()
+            .then(function() {
+
+              mostrarFecha(
+                new Date().toISOString()
+              );
+
+              // Guardar la versión recibida para evitar descargas innecesarias.
+              try {
+                if (data.version) {
+                  localStorage.setItem(VERSION_VALUE_KEY, String(data.version));
+                  localStorage.setItem(VERSION_CHECK_KEY, String(Date.now()));
+                }
+              } catch (e) {}
+
+              mensaje.className =
+                "mensaje";
+
+              mensaje.textContent = automatico
+                ? "✅ Productos actualizados automáticamente."
+                : "✅ Productos actualizados correctamente.";
+
+              estadoProgresoActualizacion("completo","✅ Actualización completada.");
+              if (btnActualizar) {
+                btnActualizar.disabled = false;
+                btnActualizar.textContent = "↻ Actualizar productos";
+              }
+              terminarProgresoActualizacion();
+
+            })
+            .catch(function(error) {
+
+              console.error(error);
+
+              mensaje.className =
+                "mensaje error";
+
+              mensaje.textContent =
+                "⚠️ Productos cargados, pero no se pudieron guardar localmente.";
+
+              if (btnActualizar) {
+                btnActualizar.disabled = false;
+                btnActualizar.textContent = "↻ Actualizar productos";
+              }
+              terminarProgresoActualizacion();
+
+            });
+
+        } catch (error) {
+
+          console.error(error);
+
+          mensaje.className =
+            "mensaje error";
+
+          mensaje.textContent =
+            "❌ Error procesando los productos.";
+
+          if (btnActualizar) {
+            btnActualizar.disabled = false;
+            btnActualizar.textContent = "↻ Actualizar productos";
+          }
+          terminarProgresoActualizacion();
+
         }
 
-        estadoProgresoActualizacion("completo", "✅ Actualización completada.");
-        limpiarSolicitud();
-        liberarInterfaz();
-        terminarProgresoActualizacion();
-      } catch (error) {
-        console.error("Error actualizando productos:", error);
-        finalizarError("No se pudo completar la actualización.");
-      }
-    };
+        const script =
+          document.getElementById(
+            callbackName
+          );
 
-    script.src = API_URL + "?accion=productos&callback=" +
-      encodeURIComponent(callbackName) + "&t=" + Date.now();
-    script.onerror = function() {
-      finalizarError("No se pudo conectar con Google Sheets.");
-    };
-    document.head.appendChild(script);
+        if (script) {
+          script.remove();
+        }
+
+        delete window[callbackName];
+
+      };
+
+
+    const script =
+      document.createElement("script");
+
+    script.id =
+      callbackName;
+
+    script.src =
+      API_URL +
+      "?accion=productos&callback=" +
+      callbackName +
+      "&t=" +
+      Date.now();
+
+    script.onerror =
+      function() {
+
+        mensaje.className =
+          "mensaje error";
+
+        mensaje.textContent =
+          "❌ No se pudo conectar con Google Sheets.";
+
+        if (btnActualizar) {
+          btnActualizar.disabled = false;
+          btnActualizar.textContent = "↻ Actualizar productos";
+        }
+        terminarProgresoActualizacion();
+
+        script.remove();
+
+        delete window[callbackName];
+
+      };
+
+
+    document.body.appendChild(script);
+
   }
 
 
@@ -3597,7 +3658,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   }
 
 
-
   /* =========================================================
      CARGAR AVISO DESDE CONFIG
   ========================================================= */
@@ -3641,10 +3701,6 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
   async function iniciar() {
 
-    // Dispara la comprobación de versión apenas comienza a ejecutarse el inicio,
-    // en paralelo con la apertura de IndexedDB y la carga de productos locales.
-    const consultaVersion = comprobarActualizacionAutomatica();
-
     try {
 
       await abrirDB();
@@ -3671,7 +3727,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
         document.getElementById(
           "mensaje"
         ).textContent =
-          "✅ Productos disponibles. Verificando novedades en segundo plano… Puedes escanear.";
+          "✅ Productos disponibles. Puedes escanear.";
 
       } else {
 
@@ -3682,9 +3738,8 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
 
       }
 
-      // Al terminar de cargar la base local, procesamos el resultado de la
-      // consulta que ya se inició al entrar (sin esperar para mostrar el lector).
-      consultaVersion.then(aplicarVersionRemota);
+      // La comprobación es ligera y no bloquea el uso de la base local.
+      comprobarActualizacionAutomatica();
 
     } catch (error) {
 
@@ -3705,25 +3760,7 @@ background:#fffafd!important;color:#563947!important;border-color:#f1ccdc!import
   }
 
 
-  // Revisión liviana cada 60 segundos mientras la página esté visible.
-  function programarVerificacionPeriodica() {
-    if (temporizadorVerificacion) clearInterval(temporizadorVerificacion);
-    temporizadorVerificacion = setInterval(function() {
-      if (document.visibilityState !== "visible" || actualizacionEnCurso || verificacionEnCurso) return;
-      comprobarActualizacionAutomatica().then(aplicarVersionRemota);
-    }, 60000);
-  }
-
-  document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === "visible") {
-      if (!actualizacionEnCurso && !verificacionEnCurso) {
-        comprobarActualizacionAutomatica().then(aplicarVersionRemota);
-      }
-    }
-  });
-
   iniciar();
-  programarVerificacionPeriodica();
 
 </script>
 
